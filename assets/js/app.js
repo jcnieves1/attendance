@@ -885,19 +885,29 @@ function renderTeamDashboard(rows, year, month) {
   });
 }
 
-/** Builds heatmap cell HTML for every day between fromStr and toStr (inclusive). */
+/**
+ * Builds heatmap cell HTML for every day between fromStr and toStr
+ * (inclusive). Each cell's tooltip shows the date plus who actually checked
+ * in that day, so hovering tells you both at a glance instead of just a
+ * bare count.
+ */
 function buildHeatmapRange(rows, fromStr, toStr) {
-  const counts = {};
-  rows.forEach((r) => { counts[r.attendance_date] = (counts[r.attendance_date] || 0) + 1; });
+  const namesByDate = {};
+  rows.forEach((r) => {
+    if (!namesByDate[r.attendance_date]) namesByDate[r.attendance_date] = [];
+    namesByDate[r.attendance_date].push(r.full_name);
+  });
 
   const start = new Date(`${fromStr}T00:00:00`);
   const end = new Date(`${toStr}T00:00:00`);
   let html = "";
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const dstr = ymd(d);
-    const c = counts[dstr] || 0;
+    const names = namesByDate[dstr] || [];
+    const c = names.length;
     const level = c === 0 ? 0 : c === 1 ? 1 : c === 2 ? 2 : c <= 4 ? 3 : 4;
-    html += `<div class="heat-cell" data-level="${level}" title="${dstr}: ${c}"></div>`;
+    const tooltip = c ? `${dstr} — ${names.join(", ")}` : dstr;
+    html += `<div class="heat-cell" data-level="${level}" title="${escapeHtml(tooltip)}"></div>`;
   }
   return html;
 }
