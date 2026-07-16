@@ -1,0 +1,66 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pal the frog, OfficePal mascot, holding a notebook and pencil, taking attendance notes">
+  <ellipse cx="100" cy="187" rx="55" ry="9" fill="#000" opacity="0.08"/>
+
+  <!-- legs -->
+  <ellipse cx="72" cy="172" rx="18" ry="16" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+  <ellipse cx="128" cy="172" rx="18" ry="16" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+
+  <!-- webbed feet -->
+  <path d="M54 180 Q72 202 90 180 Q72 190 54 180 Z" fill="#4c9a49"/>
+  <path d="M110 180 Q128 202 146 180 Q128 190 110 180 Z" fill="#4c9a49"/>
+
+  <!-- body -->
+  <ellipse cx="100" cy="132" rx="50" ry="46" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+  <ellipse cx="100" cy="150" rx="30" ry="26" fill="#f5f9e8"/>
+
+  <!-- arms holding the notebook -->
+  <path d="M62 118 C 54 130, 59 145, 76 151" stroke="#4c9a49" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M62 118 C 54 130, 59 145, 76 151" stroke="#74c476" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M138 118 C 146 128, 142 138, 128 130" stroke="#4c9a49" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M138 118 C 146 128, 142 138, 128 130" stroke="#74c476" stroke-width="10" fill="none" stroke-linecap="round"/>
+
+  <!-- notebook -->
+  <rect x="70" y="118" width="60" height="46" rx="5" fill="#6c5ce7" stroke="#5647c9" stroke-width="2"/>
+  <rect x="76" y="124" width="48" height="34" rx="3" fill="#ffffff"/>
+  <circle cx="70" cy="124" r="2" fill="#5647c9"/>
+  <circle cx="70" cy="132" r="2" fill="#5647c9"/>
+  <circle cx="70" cy="140" r="2" fill="#5647c9"/>
+  <circle cx="70" cy="148" r="2" fill="#5647c9"/>
+  <circle cx="70" cy="156" r="2" fill="#5647c9"/>
+  <line x1="82" y1="132" x2="118" y2="132" stroke="#e2e2f5" stroke-width="2"/>
+  <line x1="82" y1="140" x2="118" y2="140" stroke="#e2e2f5" stroke-width="2"/>
+  <line x1="82" y1="148" x2="118" y2="148" stroke="#e2e2f5" stroke-width="2"/>
+  <path d="M81 132.5 L84 136 L90 128" stroke="#4c9a49" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M81 140.5 L84 144 L90 136" stroke="#4c9a49" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- pencil, tip touching the page -->
+  <line x1="112" y1="135" x2="128" y2="119" stroke="#f2b705" stroke-width="5" stroke-linecap="round"/>
+  <line x1="124.5" y1="122.5" x2="129.5" y2="117.5" stroke="#2d2a35" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="113" cy="134" r="3.2" fill="#ff9eb0"/>
+
+  <!-- head -->
+  <ellipse cx="100" cy="86" rx="40" ry="34" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+
+  <!-- eye mounds -->
+  <circle cx="72" cy="62" r="20" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+  <circle cx="128" cy="62" r="20" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+
+  <!-- sclera + pupils -->
+  <circle cx="72" cy="60" r="13" fill="#ffffff"/>
+  <circle cx="128" cy="60" r="13" fill="#ffffff"/>
+  <circle cx="74" cy="61" r="7" fill="#2d2a35"/>
+  <circle cx="126" cy="61" r="7" fill="#2d2a35"/>
+  <circle cx="70.5" cy="57" r="2.2" fill="#fff"/>
+  <circle cx="124.5" cy="57" r="2.2" fill="#fff"/>
+
+  <!-- blush -->
+  <ellipse cx="66" cy="96" rx="7" ry="4.5" fill="#ff9eb0" opacity="0.65"/>
+  <ellipse cx="134" cy="96" rx="7" ry="4.5" fill="#ff9eb0" opacity="0.65"/>
+
+  <!-- nostrils -->
+  <circle cx="94" cy="88" r="1.3" fill="#4c9a49"/>
+  <circle cx="106" cy="88" r="1.3" fill="#4c9a49"/>
+
+  <!-- mouth -->
+  <path d="M66 100 Q100 116 134 100" stroke="#3d7a3b" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

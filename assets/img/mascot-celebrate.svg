@@ -1,0 +1,64 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pal the frog celebrating, holding up a notebook full of checked-in attendance">
+  <ellipse cx="100" cy="188" rx="55" ry="9" fill="#000" opacity="0.08"/>
+
+  <!-- confetti -->
+  <rect x="30" y="30" width="7" height="7" fill="#6c5ce7" transform="rotate(20 33 33)"/>
+  <rect x="165" y="40" width="7" height="7" fill="#d62828" transform="rotate(-15 168 43)"/>
+  <circle cx="45" cy="70" r="4" fill="#f2b705"/>
+  <circle cx="160" cy="75" r="4" fill="#4c9a49"/>
+  <rect x="95" y="15" width="7" height="7" fill="#e5533d" transform="rotate(45 98 18)"/>
+
+  <!-- legs -->
+  <ellipse cx="72" cy="173" rx="18" ry="16" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+  <ellipse cx="128" cy="173" rx="18" ry="16" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+
+  <!-- webbed feet -->
+  <path d="M54 181 Q72 203 90 181 Q72 191 54 181 Z" fill="#4c9a49"/>
+  <path d="M110 181 Q128 203 146 181 Q128 191 110 181 Z" fill="#4c9a49"/>
+
+  <!-- body -->
+  <ellipse cx="100" cy="133" rx="50" ry="46" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+  <ellipse cx="100" cy="151" rx="30" ry="26" fill="#f5f9e8"/>
+
+  <!-- left arm raised, cheering -->
+  <path d="M68 128 C 50 116, 42 92, 50 78" stroke="#4c9a49" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M68 128 C 50 116, 42 92, 50 78" stroke="#74c476" stroke-width="10" fill="none" stroke-linecap="round"/>
+
+  <!-- right arm raised, holding the notebook up high -->
+  <path d="M132 128 C 150 112, 152 88, 144 72" stroke="#4c9a49" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M132 128 C 150 112, 152 88, 144 72" stroke="#74c476" stroke-width="10" fill="none" stroke-linecap="round"/>
+
+  <!-- notebook, held up triumphantly, full of checkmarks -->
+  <rect x="118" y="42" width="56" height="42" rx="5" fill="#6c5ce7" stroke="#5647c9" stroke-width="2" transform="rotate(-8 146 63)"/>
+  <rect x="124" y="48" width="44" height="30" rx="3" fill="#ffffff" transform="rotate(-8 146 63)"/>
+  <g transform="rotate(-8 146 63)">
+    <line x1="130" y1="55" x2="162" y2="55" stroke="#e2e2f5" stroke-width="2"/>
+    <line x1="130" y1="63" x2="162" y2="63" stroke="#e2e2f5" stroke-width="2"/>
+    <line x1="130" y1="71" x2="162" y2="71" stroke="#e2e2f5" stroke-width="2"/>
+    <path d="M129 55.5 L132 59 L138 51" stroke="#4c9a49" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M129 63.5 L132 67 L138 59" stroke="#4c9a49" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M129 71.5 L132 75 L138 67" stroke="#4c9a49" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- head -->
+  <ellipse cx="100" cy="87" rx="40" ry="34" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+
+  <!-- eye mounds -->
+  <circle cx="72" cy="63" r="20" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+  <circle cx="128" cy="63" r="20" fill="#74c476" stroke="#4c9a49" stroke-width="2"/>
+
+  <!-- happy closed eyes ^ ^ -->
+  <path d="M63 61 Q72 51 81 61" stroke="#2d2a35" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M119 61 Q128 51 137 61" stroke="#2d2a35" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+  <!-- blush -->
+  <ellipse cx="66" cy="97" rx="7" ry="4.5" fill="#ff9eb0" opacity="0.65"/>
+  <ellipse cx="134" cy="97" rx="7" ry="4.5" fill="#ff9eb0" opacity="0.65"/>
+
+  <!-- nostrils -->
+  <circle cx="94" cy="89" r="1.3" fill="#4c9a49"/>
+  <circle cx="106" cy="89" r="1.3" fill="#4c9a49"/>
+
+  <!-- big open cheerful smile -->
+  <path d="M64 100 Q100 124 136 100 Q100 114 64 100 Z" fill="#3d7a3b"/>
+</svg>

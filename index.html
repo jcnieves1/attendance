@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>OfficePal — office attendance, made friendly</title>
+<link rel="icon" href="assets/img/mascot-wave.svg" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<!-- ======================= AUTH SCREEN ======================= -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <img class="mascot" src="assets/img/mascot-wave.svg" alt="Pal the OfficePal mascot waving" />
+    <h1 style="margin:6px 0 2px;">OfficePal</h1>
+    <p style="color:var(--text-muted); margin-top:0;" data-t="tagline">Your friendly office attendance buddy</p>
+
+    <div class="auth-tabs">
+      <button id="tab-login" class="active" data-t="login_tab">Log in</button>
+      <button id="tab-register" data-t="register_tab">Create account</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <label data-t="email_label">Email</label>
+      <input type="email" id="login-email" required autocomplete="email" />
+      <label data-t="password_label">Password</label>
+      <input type="password" id="login-password" required autocomplete="current-password" />
+      <div style="text-align:right; margin-top:8px;">
+        <a href="#" id="forgot-password-link" style="font-size:13px;" data-t="forgot_password_link">Forgot your password?</a>
+      </div>
+      <button type="submit" class="btn" style="width:100%; margin-top:14px;" data-t="login_button">Log in</button>
+      <div class="error-msg" id="login-error"></div>
+    </form>
+
+    <form id="register-form" class="auth-form hidden">
+      <label data-t="full_name_label">Your real name</label>
+      <input type="text" id="register-name" required autocomplete="name" />
+      <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-t="full_name_hint"></div>
+      <label data-t="email_label">Email</label>
+      <input type="email" id="register-email" required autocomplete="email" />
+      <label data-t="password_label">Password</label>
+      <input type="password" id="register-password" required minlength="8" autocomplete="new-password" />
+      <label data-t="security_question_label">Security question (optional)</label>
+      <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-t="security_question_hint"></div>
+      <input type="text" id="register-security-question" data-t-placeholder="security_question_placeholder" autocomplete="off" />
+      <label data-t="security_answer_label">Your answer</label>
+      <input type="text" id="register-security-answer" autocomplete="off" />
+      <button type="submit" class="btn" style="width:100%; margin-top:18px;" data-t="register_button">Create my account</button>
+      <div class="error-msg" id="register-error"></div>
+    </form>
+
+    <div style="margin-top:18px; display:flex; justify-content:center; flex-wrap:wrap; gap:14px;">
+      <select id="auth-lang" class="icon-select">
+        <option value="en">EN — English</option>
+        <option value="es">ES — Español</option>
+      </select>
+      <div class="theme-dot-group">
+        <span class="theme-dot sunrise" data-theme="sunrise" title="Sunrise"></span>
+        <span class="theme-dot forest" data-theme="forest" title="Forest"></span>
+        <span class="theme-dot midnight" data-theme="midnight" title="Midnight"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= APP SHELL ======================= -->
+<div id="app-shell" class="hidden">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button id="hamburger-btn" class="hamburger-btn" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="brand">
+        <img src="assets/img/mascot-wave.svg" alt="OfficePal" />
+        <span data-t="app_name">OfficePal</span>
+      </div>
+    </div>
+    <div class="topbar-controls">
+      <button id="invitations-bell" class="icon-btn" aria-label="Invitations">
+        🔔<span id="invitations-badge" class="badge hidden">0</span>
+      </button>
+      <select id="app-lang" class="icon-select">
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+      </select>
+      <div class="theme-dot-group">
+        <span class="theme-dot sunrise" data-theme="sunrise" title="Sunrise"></span>
+        <span class="theme-dot forest" data-theme="forest" title="Forest"></span>
+        <span class="theme-dot midnight" data-theme="midnight" title="Midnight"></span>
+      </div>
+      <span id="current-user-name" class="current-user-name"></span>
+      <button id="account-btn" class="icon-btn" aria-label="Account">⚙</button>
+      <button id="logout-btn" class="btn ghost small" data-t="nav_logout">Log out</button>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div id="sidebar-backdrop" class="sidebar-backdrop hidden"></div>
+    <div class="sidebar" id="sidebar">
+      <button id="new-team-btn" class="btn" style="width:100%;" data-t="create_team">Create a team</button>
+      <h4 data-t="my_teams">My teams</h4>
+      <div id="team-list"></div>
+    </div>
+
+    <div class="main-content" id="main-content">
+      <!-- rendered by app.js -->
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL: create team ======================= -->
+<div id="modal-create-team" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left; max-width:420px;">
+    <h2 data-t="create_team">Create a team</h2>
+    <label data-t="team_name_label">Team name</label>
+    <input type="text" id="new-team-name" />
+    <label data-t="team_desc_label">Description (optional)</label>
+    <input type="text" id="new-team-desc" />
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancel-create-team" data-t="cancel">Cancel</button>
+      <button class="btn" id="confirm-create-team" data-t="create_team_button">Create team</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL: invitations ======================= -->
+<div id="modal-invitations" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left; max-width:420px;">
+    <h2 data-t="pending_invitations">Pending invitations</h2>
+    <div id="invitations-modal-list"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="close-invitations-modal" data-t="close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL: forgot password ======================= -->
+<div id="modal-forgot-password" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left; max-width:420px;">
+    <h2 data-t="forgot_password_title">Forgot your password?</h2>
+
+    <div id="forgot-step-email">
+      <label data-t="email_label">Email</label>
+      <input type="email" id="forgot-email" autocomplete="email" />
+      <button class="btn" id="forgot-continue-btn" style="width:100%; margin-top:14px;" data-t="continue">Continue</button>
+      <div class="error-msg" id="forgot-email-error"></div>
+    </div>
+
+    <div id="forgot-step-answer" class="hidden">
+      <p id="forgot-question-text" style="font-weight:600;"></p>
+      <label data-t="security_answer_label">Your answer</label>
+      <input type="text" id="forgot-answer" autocomplete="off" />
+      <label data-t="new_password_label">New password</label>
+      <input type="password" id="forgot-new-password" minlength="8" autocomplete="new-password" />
+      <button class="btn" id="forgot-submit-btn" style="width:100%; margin-top:14px;" data-t="reset_password_button">Reset password</button>
+      <div class="error-msg" id="forgot-answer-error"></div>
+    </div>
+
+    <div id="forgot-step-no-question" class="hidden">
+      <p style="color:var(--text-muted); font-size:14px;" data-t="no_security_question_msg"></p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="close-forgot-modal" data-t="close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL: my account ======================= -->
+<div id="modal-account" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left; max-width:420px;">
+    <h2 data-t="my_account_title">My account</h2>
+
+    <h3 style="margin-bottom:0;" data-t="change_password_title">Change password</h3>
+    <label data-t="current_password_label">Current password</label>
+    <input type="password" id="account-current-password" autocomplete="current-password" />
+    <label data-t="new_password_label">New password</label>
+    <input type="password" id="account-new-password" minlength="8" autocomplete="new-password" />
+    <button class="btn small" id="account-change-password-btn" style="margin-top:10px;" data-t="change_password_button">Change password</button>
+    <div class="error-msg" id="account-password-error"></div>
+    <div class="success-msg hidden" id="account-password-success" data-t="password_changed_success"></div>
+
+    <h3 style="margin-top:22px; margin-bottom:0;" data-t="security_question_title">Security question</h3>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-t="security_question_hint"></p>
+    <label data-t="security_question_label">Security question (optional)</label>
+    <input type="text" id="account-security-question" data-t-placeholder="security_question_placeholder" autocomplete="off" />
+    <label data-t="security_answer_label">Your answer</label>
+    <input type="text" id="account-security-answer" autocomplete="off" />
+    <button class="btn small" id="account-save-security-btn" style="margin-top:10px;" data-t="save">Save</button>
+    <div class="error-msg" id="account-security-error"></div>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="close-account-modal" data-t="close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL: reset a teammate's password ======================= -->
+<div id="modal-reset-password" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left; max-width:380px;">
+    <h2 data-t="reset_member_password_title">Reset a teammate's password</h2>
+    <p style="color:var(--text-muted); font-size:13px;">
+      <span data-t="reset_password_for_label">Resetting password for</span>
+      <strong id="reset-password-target-name"></strong>
+    </p>
+    <label data-t="new_password_label">New password</label>
+    <input type="password" id="reset-member-new-password" minlength="8" autocomplete="new-password" />
+    <div class="error-msg" id="reset-password-error"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancel-reset-password" data-t="cancel">Cancel</button>
+      <button class="btn" id="confirm-reset-password" data-t="reset_password_button">Reset password</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL: person attendance calendar (admin) ======================= -->
+<div id="modal-person-calendar" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left; max-width:460px;">
+    <h2 id="person-cal-name" style="margin-bottom:2px;"></h2>
+    <div id="person-cal-period" style="color:var(--text-muted); font-size:13px; margin-bottom:10px;"></div>
+    <div id="person-cal-body"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="close-person-calendar-modal" data-t="close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
