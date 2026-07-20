@@ -411,6 +411,14 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
 .modal-actions .btn { flex: 1; }
 
+/* Notifications/invitations modal: the message list can grow arbitrarily
+   long, so only that area scrolls — the modal itself is height-capped and
+   the Close button stays put below it, always reachable no matter how many
+   messages there are. */
+.notifications-modal { display: flex; flex-direction: column; max-height: 80vh; }
+.notifications-scroll-area { overflow-y: auto; flex: 1 1 auto; min-height: 0; padding-right: 6px; }
+.notifications-modal .modal-actions { flex-shrink: 0; }
+
 /* Attendance result popup: bigger and louder than a corner toast, since the
    whole point is that it's hard to miss that the action actually happened. */
 .attendance-result-modal { max-width: 440px; padding: 36px 28px; }
