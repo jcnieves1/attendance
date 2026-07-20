@@ -728,10 +728,12 @@ function renderNotificationsModalList() {
     const actionAttr = isNavigable
       ? `data-action="review" data-team-id="${n.team_id || ""}" data-focus="${NOTIF_NAV_TARGETS[n.type]}"`
       : `data-action="acknowledge"`;
+    const timestamp = n.created_at ? formatDateTimeHuman(n.created_at) : "";
     return `
       <div class="invite-list-item">
         <div>
           <div>${message}</div>
+          ${timestamp ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${timestamp}</div>` : ""}
         </div>
         <div style="display:flex; gap:6px;">
           <button class="btn ${isNavigable ? "" : "ghost"} small" data-id="${n.id}" ${actionAttr}>${actionLabel}</button>
@@ -942,6 +944,18 @@ function formatDateHuman(dateStr) {
   const d = new Date(`${dateStr}T00:00:00`);
   const locale = getLang() === "es" ? "es-ES" : "en-US";
   return d.toLocaleDateString(locale, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+}
+
+/**
+ * Formats a MySQL DATETIME string ("Y-m-d H:i:s") as a compact, locale-aware
+ * date + time — used for the 🔔 notification timestamps, so people can tell
+ * when each one was generated. Swaps the space for "T" so every browser
+ * parses it as local time instead of guessing (or rejecting) the format.
+ */
+function formatDateTimeHuman(dateTimeStr) {
+  const d = new Date(dateTimeStr.replace(" ", "T"));
+  const locale = getLang() === "es" ? "es-ES" : "en-US";
+  return d.toLocaleString(locale, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 /**
