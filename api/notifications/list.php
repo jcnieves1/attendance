@@ -6,7 +6,7 @@ require_once __DIR__ . '/../helpers.php';
 $userId = require_auth();
 
 $stmt = db()->prepare(
-    'SELECT id, type, team_id, team_name, actor_name, created_at
+    'SELECT id, type, team_id, team_name, actor_name, actor_email, created_at
      FROM notifications
      WHERE user_id = ? AND status = "unread"
      ORDER BY created_at DESC'

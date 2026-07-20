@@ -164,10 +164,11 @@ CREATE TABLE IF NOT EXISTS join_requests (
 CREATE TABLE IF NOT EXISTS notifications (
     id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id         INT UNSIGNED NOT NULL COMMENT 'recipient',
-    type            ENUM('removed_from_team','join_request') NOT NULL,
+    type            ENUM('removed_from_team','join_request','join_request_approved','join_request_rejected') NOT NULL,
     team_id         INT UNSIGNED NULL,
     team_name       VARCHAR(150) NOT NULL,
-    actor_name      VARCHAR(150) NULL COMMENT 'e.g. the person requesting to join, for join_request notifications',
+    actor_name      VARCHAR(150) NULL COMMENT 'e.g. the requester (join_request) or the responding admin (join_request_approved/rejected)',
+    actor_email     VARCHAR(190) NULL COMMENT 'responding admin''s email, so a rejection notification can tell the person who to contact',
     status          ENUM('unread','read') NOT NULL DEFAULT 'unread',
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     read_at         DATETIME NULL,

@@ -24,6 +24,14 @@ if (!$request) {
 
 require_manager($userId, (int) $request['team_id']);
 
+$stmt = $pdo->prepare('SELECT name FROM teams WHERE id = ?');
+$stmt->execute([$request['team_id']]);
+$teamName = (string) $stmt->fetchColumn();
+
+$stmt = $pdo->prepare('SELECT full_name, email FROM users WHERE id = ?');
+$stmt->execute([$userId]);
+$responder = $stmt->fetch();
+
 $pdo->beginTransaction();
 try {
     if ($action === 'approve') {
@@ -31,9 +39,13 @@ try {
             ->execute([$request['team_id'], $request['user_id']]);
         $pdo->prepare('UPDATE join_requests SET status = "approved", responded_at = NOW() WHERE id = ?')
             ->execute([$requestId]);
+        // Cheerful welcome, naming who approved it.
+        create_notification($request['user_id'], 'join_request_approved', (int) $request['team_id'], $teamName, $responder['full_name']);
     } else {
         $pdo->prepare('UPDATE join_requests SET status = "rejected", responded_at = NOW() WHERE id = ?')
             ->execute([$requestId]);
+        // Apologetic note, naming who rejected it and how to reach them.
+        create_notification($request['user_id'], 'join_request_rejected', (int) $request['team_id'], $teamName, $responder['full_name'], $responder['email']);
     }
     $pdo->commit();
 } catch (Throwable $e) {

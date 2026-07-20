@@ -111,6 +111,17 @@ mysql -u root -p officepal < database/migrate_v5_notifications.sql
 
 It adds the new `notifications` table.
 
+If you're upgrading further so requesters get notified when their join
+request is approved or rejected, also run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v6_join_response_notifications.sql
+```
+
+It widens `notifications.type` to add `join_request_approved` and
+`join_request_rejected`, and adds a nullable `notifications.actor_email`
+column (so a rejection notification can tell the person who to contact).
+
 ## 2. Configure the app
 
 Edit `api/config.php` (or set the equivalent environment variables — handy if
@@ -173,7 +184,10 @@ your machine's local IP, to try the mobile layout).
     **Accept** — the requester is added as an **employee** (never as admin),
     or **Reject** to turn them down. As soon as the request is sent, every
     owner/admin of that team sees a 🔔 notification with a **Review** button
-    that jumps straight to this panel.
+    that jumps straight to this panel. Either way, the requester gets their
+    own 🔔 notification naming who responded — a cheerful welcome if
+    approved, or an apologetic note with that admin's email to contact if
+    rejected.
 16. From the **Members** list, click **Remove** on someone — a confirm
     dialog warns that this permanently deletes their attendance history for
     that team and can't be undone. Once confirmed, they'll see a 🔔
@@ -198,6 +212,8 @@ OfficePal/
     migrate_v3_password_reset.sql     Upgrade path: adds security question
     migrate_v4_join_requests.sql      Upgrade path: team rename/join requests
     migrate_v5_notifications.sql      Upgrade path: adds notifications table
+    migrate_v6_join_response_notifications.sql
+                                       Upgrade path: notify on approve/reject
 ```
 
 ## Notes on the design

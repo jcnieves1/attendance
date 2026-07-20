@@ -159,15 +159,17 @@ function week_start(?string $ymd = null): string
 }
 
 /**
- * Queues a 🔔-bell notification for a user. team_name/actor_name are stored
- * as plain-text snapshots (not live joins) so the notification still reads
- * sensibly even if the team or the other person's account changes later.
+ * Queues a 🔔-bell notification for a user. team_name/actor_name/actor_email
+ * are stored as plain-text snapshots (not live joins) so the notification
+ * still reads sensibly even if the team or the other person's account
+ * changes later. actor_email is only really used by join_request_rejected
+ * (so the person knows who to contact), but is accepted generally.
  */
-function create_notification(int $userId, string $type, ?int $teamId, string $teamName, ?string $actorName = null): void
+function create_notification(int $userId, string $type, ?int $teamId, string $teamName, ?string $actorName = null, ?string $actorEmail = null): void
 {
     db()->prepare(
-        'INSERT INTO notifications (user_id, type, team_id, team_name, actor_name) VALUES (?, ?, ?, ?, ?)'
-    )->execute([$userId, $type, $teamId, $teamName, $actorName]);
+        'INSERT INTO notifications (user_id, type, team_id, team_name, actor_name, actor_email) VALUES (?, ?, ?, ?, ?, ?)'
+    )->execute([$userId, $type, $teamId, $teamName, $actorName, $actorEmail]);
 }
 
 /** Active owner/admin user IDs for a team — the people who manage it. */

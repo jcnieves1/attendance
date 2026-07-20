@@ -667,11 +667,31 @@ function renderInvitationsModal() {
   renderNotificationsModalList();
 }
 
+/** Builds the display text for one 🔔 notification, based on its type. */
+function buildNotificationMessage(n) {
+  const team = escapeHtml(n.team_name);
+  const actor = escapeHtml(n.actor_name || "");
+  const email = escapeHtml(n.actor_email || "");
+  switch (n.type) {
+    case "join_request":
+      return t("notif_join_request_message").replace("{name}", actor).replace("{team}", team);
+    case "join_request_approved":
+      return t("notif_join_approved_message").replace("{actor}", actor).replace("{team}", team);
+    case "join_request_rejected": {
+      const emailHtml = email ? `<a href="mailto:${email}">${email}</a>` : "";
+      return t("notif_join_rejected_message").replace("{actor}", actor).replace("{team}", team).replace("{email}", emailHtml);
+    }
+    default: // removed_from_team
+      return t("notif_removed_message").replace("{team}", team);
+  }
+}
+
 /**
  * Renders the informational 🔔 notifications (distinct from invitations,
  * which have their own accept/decline flow above): a teammate being removed
- * from a team, or someone waiting on a join-request decision. Both actions
- * mark the notification read on the server before updating the local list.
+ * from a team, someone waiting on a join-request decision, or a requester
+ * being told their own join request was approved/rejected. All but the
+ * join-request-pending case are plain "Acknowledge" — mark read and move on.
  */
 function renderNotificationsModalList() {
   const box = document.getElementById("notifications-modal-list");
@@ -680,9 +700,7 @@ function renderNotificationsModalList() {
     return;
   }
   box.innerHTML = APP.notifications.map((n) => {
-    const message = n.type === "join_request"
-      ? t("notif_join_request_message").replace("{name}", escapeHtml(n.actor_name || "")).replace("{team}", escapeHtml(n.team_name))
-      : t("notif_removed_message").replace("{team}", escapeHtml(n.team_name));
+    const message = buildNotificationMessage(n);
     const actionLabel = n.type === "join_request" ? t("review_button") : t("acknowledge_button");
     const actionAttr = n.type === "join_request" ? `data-action="review" data-team-id="${n.team_id || ""}"` : `data-action="acknowledge"`;
     return `
