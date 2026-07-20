@@ -9,6 +9,13 @@ $fullName = trim($input['full_name'] ?? '');
 $language = ($input['language'] ?? 'en') === 'es' ? 'es' : 'en';
 $securityQuestion = trim($input['security_question'] ?? '');
 $securityAnswer = trim($input['security_answer'] ?? '');
+$captchaAnswer = $input['captcha_answer'] ?? null;
+
+// Same math CAPTCHA as the login page (see api/auth/captcha.php +
+// api/helpers.php) — a lightweight guard against scripted bulk sign-ups.
+if (!verify_captcha_answer($captchaAnswer)) {
+    json_error('captcha_incorrect', 422, "That wasn't quite right — please solve the new security check below.");
+}
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     json_error('invalid_email', 422, 'Please enter a valid email address.');

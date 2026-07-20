@@ -169,7 +169,7 @@ async function boot() {
   wireAuthForms();
   wireForgotPassword();
   wireStaticButtons();
-  loadLoginCaptcha();
+  loadAuthCaptcha("login");
 
   try {
     const res = await apiGet("auth/me.php");
@@ -219,14 +219,17 @@ function wireLangSelectors() {
 }
 
 /**
- * Fetches a fresh math CAPTCHA challenge for the login form and renders it
- * as a localized "What is {a} + {b}?" question. Called once at boot and
- * again after every failed login attempt — the server invalidates the old
- * challenge on each submit either way, so a stale question on screen would
- * just fail regardless.
+ * Fetches a fresh math CAPTCHA challenge and renders it as a localized
+ * "What is {a} + {b}?" question on either the login or register form
+ * (which is "login" or "register"). There's only ever one live challenge in
+ * the session at a time, so this is called for whichever form is currently
+ * visible: once at boot (login is the default tab), again on every tab
+ * switch, and again after any failed submit on either form — the server
+ * consumes the old challenge on every attempt either way, so a stale
+ * question on screen would just fail regardless.
  */
-async function loadLoginCaptcha() {
-  const label = document.getElementById("login-captcha-question");
+async function loadAuthCaptcha(which) {
+  const label = document.getElementById(`${which}-captcha-question`);
   if (!label) return;
   label.textContent = t("captcha_loading");
   try {
@@ -276,7 +279,7 @@ function wireAuthForms() {
       // The server consumes the CAPTCHA challenge on every attempt (right or
       // wrong), so a fresh one is needed before they can try again.
       document.getElementById("login-captcha-answer").value = "";
-      loadLoginCaptcha();
+      loadAuthCaptcha("login");
     }
   });
 
@@ -292,12 +295,15 @@ function wireAuthForms() {
         security_question: document.getElementById("register-security-question").value,
         security_answer: document.getElementById("register-security-answer").value,
         language: getLang(),
+        captcha_answer: document.getElementById("register-captcha-answer").value,
       });
       const me = await apiGet("auth/me.php");
       APP.user = me.user;
       enterApp();
     } catch (err) {
       errorEl.textContent = err.message || t("error_generic");
+      document.getElementById("register-captcha-answer").value = "";
+      loadAuthCaptcha("register");
     }
   });
 }
@@ -307,6 +313,9 @@ function switchAuthTab(which) {
   document.getElementById("tab-register").classList.toggle("active", which === "register");
   document.getElementById("login-form").classList.toggle("hidden", which !== "login");
   document.getElementById("register-form").classList.toggle("hidden", which !== "register");
+  // Only one CAPTCHA challenge is ever live in the session at a time, so
+  // whichever form just became visible needs its own fresh one.
+  loadAuthCaptcha(which);
 }
 
 /* --------------------------- forgot password (login screen) ------------------- */

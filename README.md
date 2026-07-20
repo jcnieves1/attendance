@@ -151,7 +151,9 @@ It adds a `login_attempts` table (email, IP, success, timestamp) that
 `api/auth/login.php` uses to block further tries once an email has 5+ failed
 attempts in the last 15 minutes. The CAPTCHA answer itself is never stored in
 the database — it lives only in the PHP session between fetching the
-challenge and submitting the form.
+challenge and submitting the form. The same CAPTCHA (not the rate limit) also
+guards the **Create account** form, as a lightweight check against scripted
+bulk sign-ups.
 
 ## 2. Configure the app
 
