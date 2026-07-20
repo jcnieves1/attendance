@@ -427,6 +427,24 @@ function wireStaticButtons() {
   // Person attendance calendar (admin dashboard, "Per person" breakdown).
   document.getElementById("close-person-calendar-modal").addEventListener("click", () => closeModal("modal-person-calendar"));
 
+  // Attendance confirm dialog + bigger "it worked" result popup.
+  document.getElementById("cancel-attendance-btn").addEventListener("click", () => {
+    pendingAttendanceAction = null;
+    closeModal("modal-confirm-attendance");
+  });
+  document.getElementById("confirm-attendance-btn").addEventListener("click", async () => {
+    if (!pendingAttendanceAction) return;
+    const { teamId, dateStr, isChecked, onDone } = pendingAttendanceAction;
+    pendingAttendanceAction = null;
+    closeModal("modal-confirm-attendance");
+    const ok = await toggleAttendance(teamId, dateStr, isChecked);
+    if (ok) {
+      showAttendanceResultModal(dateStr, isChecked);
+      if (onDone) onDone();
+    }
+  });
+  document.getElementById("close-attendance-result-btn").addEventListener("click", () => closeModal("modal-attendance-result"));
+
   // Reset a teammate's password (admin area).
   document.getElementById("cancel-reset-password").addEventListener("click", () => closeModal("modal-reset-password"));
   document.getElementById("confirm-reset-password").addEventListener("click", async () => {
@@ -700,12 +718,18 @@ function pickMascotMessage() {
   return t(keys[Math.floor(Math.random() * keys.length)]);
 }
 
+/** Formats a Y-m-d string as a long, locale-aware date for user-facing dialogs. */
+function formatDateHuman(dateStr) {
+  const d = new Date(`${dateStr}T00:00:00`);
+  const locale = getLang() === "es" ? "es-ES" : "en-US";
+  return d.toLocaleDateString(locale, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+}
+
 /**
- * Toggles attendance for one date, no confirmation needed. Shared by the
- * "This week" grid and the "My attendance" month calendar so both have
- * identical one-click check-in/undo behavior. Resolves true on success (so
- * the caller knows it's safe to re-render) or false if the request failed
- * (already reported via toast).
+ * Sends the actual check-in/uncheck request. Resolves true on success (safe
+ * to re-render) or false if it failed (already reported via toast). Success
+ * feedback itself is handled by the caller via the bigger result popup, not
+ * here, so this stays a plain "do the thing" helper.
  */
 async function toggleAttendance(teamId, dateStr, isChecked) {
   try {
@@ -713,7 +737,6 @@ async function toggleAttendance(teamId, dateStr, isChecked) {
       await apiPost("attendance/uncheck.php", { team_id: teamId, date: dateStr });
     } else {
       await apiPost("attendance/checkin.php", { team_id: teamId, date: dateStr });
-      showToast(t("checkin_success"));
     }
     return true;
   } catch (err) {
@@ -722,8 +745,40 @@ async function toggleAttendance(teamId, dateStr, isChecked) {
   }
 }
 
+/* Pending attendance toggle awaiting confirmation via #modal-confirm-attendance. */
+let pendingAttendanceAction = null;
+
+/**
+ * Asks "are you sure?" before adding or removing attendance for a date —
+ * used by both the "This week" grid and the "My attendance" month calendar,
+ * so every attendance change in the app goes through the same confirm step.
+ * onDone runs after a successful toggle, so each caller can re-render
+ * whichever view it owns.
+ */
+function confirmAttendanceToggle(teamId, dateStr, isChecked, onDone) {
+  pendingAttendanceAction = { teamId, dateStr, isChecked, onDone };
+  document.getElementById("confirm-attendance-title").textContent = t(isChecked ? "confirm_remove_title" : "confirm_checkin_title");
+  document.getElementById("confirm-attendance-message").textContent = t(isChecked ? "confirm_remove_message" : "confirm_checkin_message");
+  document.getElementById("confirm-attendance-date").textContent = formatDateHuman(dateStr);
+  openModal("modal-confirm-attendance");
+}
+
+/**
+ * Bigger, harder-to-miss confirmation shown after a toggle actually
+ * succeeds — a modal instead of a corner toast, so it's obvious the action
+ * went through. wasChecked reflects state *before* the toggle: true means
+ * attendance was just removed, false means it was just added.
+ */
+function showAttendanceResultModal(dateStr, wasChecked) {
+  document.getElementById("attendance-result-title").textContent = t(wasChecked ? "attendance_removed_title" : "attendance_added_title");
+  document.getElementById("attendance-result-message").textContent = t(wasChecked ? "attendance_removed_message" : "attendance_added_message");
+  document.getElementById("attendance-result-date").textContent = formatDateHuman(dateStr);
+  document.getElementById("attendance-result-mascot").src = wasChecked ? "assets/img/mascot-wave.svg" : "assets/img/mascot-celebrate.svg";
+  openModal("modal-attendance-result");
+}
+
 function onDayCellClick(teamId, dateStr, isChecked) {
-  toggleAttendance(teamId, dateStr, isChecked).then((ok) => { if (ok) renderWeekTab(); });
+  confirmAttendanceToggle(teamId, dateStr, isChecked, () => renderWeekTab());
 }
 
 /* ------------------------------- dashboard tab -------------------------------- */
@@ -824,9 +879,7 @@ function wireMyCalendarEditing(container, checkedDates) {
   container.querySelectorAll(".cal-day-cell.cal-editable[data-date]").forEach((cell) => {
     cell.addEventListener("click", () => {
       const dateStr = cell.dataset.date;
-      toggleAttendance(teamId, dateStr, checkedDates.has(dateStr)).then((ok) => {
-        if (ok) renderDashboardTab();
-      });
+      confirmAttendanceToggle(teamId, dateStr, checkedDates.has(dateStr), () => renderDashboardTab());
     });
   });
 }

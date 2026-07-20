@@ -226,6 +226,33 @@
   </div>
 </div>
 
+<!-- ======================= MODAL: confirm attendance toggle ======================= -->
+<div id="modal-confirm-attendance" class="modal-backdrop hidden">
+  <div class="modal" style="max-width:360px;">
+    <img class="mascot" src="assets/img/mascot-wave.svg" alt="Pal" />
+    <h2 id="confirm-attendance-title" style="margin-bottom:4px;"></h2>
+    <p id="confirm-attendance-date" style="font-weight:700; margin:2px 0;"></p>
+    <p id="confirm-attendance-message" style="color:var(--text-muted); font-size:14px;"></p>
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancel-attendance-btn" data-t="cancel">Cancel</button>
+      <button class="btn" id="confirm-attendance-btn" data-t="confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL: attendance result (bigger, more visible confirmation) ======================= -->
+<div id="modal-attendance-result" class="modal-backdrop hidden">
+  <div class="modal attendance-result-modal">
+    <img class="mascot attendance-result-mascot" id="attendance-result-mascot" src="assets/img/mascot-celebrate.svg" alt="Pal" />
+    <h2 id="attendance-result-title" class="attendance-result-title"></h2>
+    <p id="attendance-result-date" style="font-weight:700; margin:2px 0;"></p>
+    <p id="attendance-result-message" style="color:var(--text-muted); font-size:15px;"></p>
+    <div class="modal-actions">
+      <button class="btn" id="close-attendance-result-btn" data-t="close">Close</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 
 <script src="assets/js/i18n.js"></script>

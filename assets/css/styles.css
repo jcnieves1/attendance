@@ -410,6 +410,12 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
 .modal-actions .btn { flex: 1; }
 
+/* Attendance result popup: bigger and louder than a corner toast, since the
+   whole point is that it's hard to miss that the action actually happened. */
+.attendance-result-modal { max-width: 440px; padding: 36px 28px; }
+.modal img.mascot.attendance-result-mascot { width: 128px; margin-bottom: 12px; }
+.attendance-result-title { font-size: 24px; font-weight: 800; margin: 4px 0 2px; }
+
 /* ---------------- Toast ---------------- */
 .toast {
   position: fixed; bottom: 24px; right: 24px; background: var(--surface); border-left: 4px solid var(--success);

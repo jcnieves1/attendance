@@ -142,10 +142,21 @@ const DICT = {
     save: "Save",
     cancel: "Cancel",
     close: "Close",
+    confirm: "Confirm",
     error_generic: "Something went wrong. Please try again.",
     not_authenticated: "Please log in to continue.",
     manager_area: "Admin area",
     weekly_pattern_note: "This applies every week until you change it.",
+
+    // Attendance confirm dialog + bigger result popup
+    confirm_checkin_title: "Check in for this day?",
+    confirm_checkin_message: "You're about to log your attendance for this day.",
+    confirm_remove_title: "Remove your attendance?",
+    confirm_remove_message: "This will remove your attendance record for this day.",
+    attendance_added_title: "You're checked in!",
+    attendance_added_message: "Your attendance for this day has been recorded.",
+    attendance_removed_title: "Attendance removed",
+    attendance_removed_message: "Your attendance record for this day has been removed.",
   },
 
   es: {
@@ -280,10 +291,20 @@ const DICT = {
     save: "Guardar",
     cancel: "Cancelar",
     close: "Cerrar",
+    confirm: "Confirmar",
     error_generic: "Algo salió mal. Inténtalo de nuevo.",
     not_authenticated: "Inicia sesión para continuar.",
     manager_area: "Área de administración",
     weekly_pattern_note: "Esto aplica cada semana hasta que lo cambies.",
+
+    confirm_checkin_title: "¿Registrar asistencia este día?",
+    confirm_checkin_message: "Estás a punto de registrar tu asistencia para este día.",
+    confirm_remove_title: "¿Quitar tu asistencia?",
+    confirm_remove_message: "Esto eliminará tu registro de asistencia para este día.",
+    attendance_added_title: "¡Asistencia registrada!",
+    attendance_added_message: "Tu asistencia para este día ha sido registrada.",
+    attendance_removed_title: "Asistencia eliminada",
+    attendance_removed_message: "Tu registro de asistencia para este día ha sido eliminado.",
   },
 };
 
