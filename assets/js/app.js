@@ -1000,7 +1000,10 @@ async function renderWeekTab() {
 }
 
 function pickMascotMessage() {
-  const keys = ["mascot_welcome_2", "mascot_encourage_1", "mascot_encourage_2"];
+  // 22 encouraging lines in rotation (up from 3) so the mascot banner
+  // doesn't repeat itself every few visits to "This week".
+  const keys = ["mascot_welcome_2"];
+  for (let i = 1; i <= 22; i++) keys.push(`mascot_encourage_${i}`);
   return t(keys[Math.floor(Math.random() * keys.length)]);
 }
 
