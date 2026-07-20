@@ -698,7 +698,7 @@ function buildNotificationMessage(n) {
       return t("notif_join_rejected_message").replace("{actor}", actor).replace("{team}", team).replace("{email}", emailHtml);
     }
     case "auto_joined":
-      return t("notif_auto_joined_message").replace("{name}", actor);
+      return t("notif_auto_joined_message").replace("{name}", actor).replace("{team}", team);
     case "join_auto_approved":
       return t("notif_join_auto_approved_message").replace("{team}", team);
     default: // removed_from_team
