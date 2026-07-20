@@ -700,20 +700,30 @@ function pickMascotMessage() {
   return t(keys[Math.floor(Math.random() * keys.length)]);
 }
 
-/** Tapping a day checks you in immediately — no confirmation needed. */
-function onDayCellClick(teamId, dateStr, isChecked) {
-  if (isChecked) {
-    apiPost("attendance/uncheck.php", { team_id: teamId, date: dateStr })
-      .then(() => renderWeekTab())
-      .catch((err) => showToast(err.message || t("error_generic")));
-    return;
-  }
-  apiPost("attendance/checkin.php", { team_id: teamId, date: dateStr })
-    .then(() => {
+/**
+ * Toggles attendance for one date, no confirmation needed. Shared by the
+ * "This week" grid and the "My attendance" month calendar so both have
+ * identical one-click check-in/undo behavior. Resolves true on success (so
+ * the caller knows it's safe to re-render) or false if the request failed
+ * (already reported via toast).
+ */
+async function toggleAttendance(teamId, dateStr, isChecked) {
+  try {
+    if (isChecked) {
+      await apiPost("attendance/uncheck.php", { team_id: teamId, date: dateStr });
+    } else {
+      await apiPost("attendance/checkin.php", { team_id: teamId, date: dateStr });
       showToast(t("checkin_success"));
-      renderWeekTab();
-    })
-    .catch((err) => showToast(err.message || t("error_generic")));
+    }
+    return true;
+  } catch (err) {
+    showToast(err.message || t("error_generic"));
+    return false;
+  }
+}
+
+function onDayCellClick(teamId, dateStr, isChecked) {
+  toggleAttendance(teamId, dateStr, isChecked).then((ok) => { if (ok) renderWeekTab(); });
 }
 
 /* ------------------------------- dashboard tab -------------------------------- */
@@ -777,8 +787,9 @@ function renderMyDashboard(rows, year, month) {
     const trackWeekends = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.track_weekends);
     body.innerHTML = `
       <div style="font-size:32px; font-weight:700;">${total} <span style="font-size:14px; color:var(--text-muted); font-weight:500;">${t("total_days_month")}</span></div>
-      <div class="cal-wrap">${buildMonthCalendarHtml(checkedDates, year, month, trackWeekends)}</div>
+      <div class="cal-wrap">${buildMonthCalendarHtml(checkedDates, year, month, trackWeekends, true)}</div>
     `;
+    wireMyCalendarEditing(body, checkedDates);
     return;
   }
 
@@ -801,13 +812,38 @@ function renderMyDashboard(rows, year, month) {
 }
 
 /**
+ * Wires click-to-toggle on the personal "My attendance" month calendar:
+ * only cells marked .cal-editable by buildMonthCalendarHtml (today or a past
+ * day the team actually tracks) respond to clicks, so future days can never
+ * be edited. Re-renders the whole Dashboard tab on success, which keeps the
+ * month total, the year view, and the "Teammates' attendance" heatmap all in
+ * sync with the change.
+ */
+function wireMyCalendarEditing(container, checkedDates) {
+  const teamId = APP.currentTeamId;
+  container.querySelectorAll(".cal-day-cell.cal-editable[data-date]").forEach((cell) => {
+    cell.addEventListener("click", () => {
+      const dateStr = cell.dataset.date;
+      toggleAttendance(teamId, dateStr, checkedDates.has(dateStr)).then((ok) => {
+        if (ok) renderDashboardTab();
+      });
+    });
+  });
+}
+
+/**
  * Builds a full month calendar (Mon-Sun header + day cells). Days the user
  * checked in get a little mascot badge instead of a plain checkmark, so
  * attendance in the selected month reads at a glance. For teams that don't
  * track weekends, Saturday/Sunday cells are shown (for date context) but
  * muted, since they're not part of that team's tracked schedule.
+ *
+ * When editable is true (the personal "My attendance" view only — never the
+ * read-only teammate calendar modal), today and past trackable days get a
+ * .cal-editable class + data-date so a click handler can toggle attendance;
+ * future days are marked .cal-future (dimmed, not clickable) instead.
  */
-function buildMonthCalendarHtml(checkedDatesSet, year, month, trackWeekends) {
+function buildMonthCalendarHtml(checkedDatesSet, year, month, trackWeekends, editable = false) {
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDow = (new Date(year, month - 1, 1).getDay() + 6) % 7; // 0=Mon..6=Sun
   const todayStr = ymd(new Date());
@@ -824,14 +860,22 @@ function buildMonthCalendarHtml(checkedDatesSet, year, month, trackWeekends) {
     const isWeekend = dow >= 5;
     const isChecked = checkedDatesSet.has(dateStr);
     const isToday = dateStr === todayStr;
+    const isFuture = dateStr > todayStr;
+    const isTrackable = trackWeekends || !isWeekend;
+    const isEditable = editable && !isFuture && isTrackable;
 
     const classes = ["cal-day-cell"];
     if (isChecked) classes.push("checked");
     if (isToday) classes.push("today");
     if (isWeekend && !trackWeekends) classes.push("weekend-muted");
+    if (isEditable) classes.push("cal-editable");
+    if (editable && isFuture) classes.push("cal-future");
+
+    const dateAttr = isEditable ? ` data-date="${dateStr}"` : "";
+    const tooltip = isEditable ? `${dateStr} — ${t(isChecked ? "tap_to_undo" : "tap_to_checkin")}` : dateStr;
 
     cellsHtml += `
-      <div class="${classes.join(" ")}" title="${dateStr}">
+      <div class="${classes.join(" ")}"${dateAttr} title="${escapeHtml(tooltip)}">
         <div class="cal-day-num">${day}</div>
         ${isChecked ? `<img class="cal-day-mascot" src="assets/img/mascot-wave.svg" alt="${t("checked_in")}" />` : ""}
       </div>
