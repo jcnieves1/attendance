@@ -91,6 +91,17 @@ It adds `users.security_question` and `users.security_answer_hash` (both
 nullable — existing accounts simply have no security question until they set
 one from My account).
 
+If you're upgrading further to add team renaming/join requests, also run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v4_join_requests.sql
+```
+
+It adds `teams.join_policy` (`invite_only` by default, or `open`), a unique
+index on `teams.name` (skipped automatically if you already have duplicate
+team names — rename the clashing teams and re-run the migration to add it),
+and the new `join_requests` table.
+
 ## 2. Configure the app
 
 Edit `api/config.php` (or set the equivalent environment variables — handy if
@@ -144,6 +155,14 @@ your machine's local IP, to try the mobile layout).
     instead: a manager/admin can reset that person's password directly.
 12. Shrink your browser window (or open the app on a phone) to see the
     hamburger menu and the responsive layout kick in.
+13. In **Admin area** → **Team settings**, rename the team (the field checks
+    availability live as you type) and edit its description, then tag it
+    **Anyone can join** under **Who can join**.
+14. From a third account, click **Find a team** in the sidebar, search for
+    that team, and click **Request to join** — it won't add you right away.
+15. Back in the first account's **Admin area** → **Join requests**, click
+    **Accept** — the requester is added as an **employee** (never as admin),
+    or **Reject** to turn them down.
 
 ## Project structure
 
@@ -161,6 +180,7 @@ OfficePal/
     schema.sql                        Fresh-install MySQL schema
     migrate_v2_inapp_invites.sql       Upgrade path: email invites -> in-app
     migrate_v3_password_reset.sql     Upgrade path: adds security question
+    migrate_v4_join_requests.sql      Upgrade path: team rename/join requests
 ```
 
 ## Notes on the design

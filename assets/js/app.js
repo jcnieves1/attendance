@@ -366,6 +366,66 @@ function wireStaticButtons() {
     }
   });
 
+  // "Find a team" — discover + request to join teams tagged 'open'.
+  document.getElementById("find-team-btn").addEventListener("click", () => {
+    document.getElementById("find-team-search").value = "";
+    loadFindTeamResults("");
+    openModal("modal-find-team");
+  });
+  document.getElementById("close-find-team-modal").addEventListener("click", () => closeModal("modal-find-team"));
+
+  let findTeamDebounce = null;
+  document.getElementById("find-team-search").addEventListener("input", (e) => {
+    clearTimeout(findTeamDebounce);
+    const q = e.target.value.trim();
+    findTeamDebounce = setTimeout(() => loadFindTeamResults(q), 250);
+  });
+
+  async function loadFindTeamResults(q) {
+    const box = document.getElementById("find-team-results");
+    box.innerHTML = `<p data-t="loading" style="color:var(--text-muted); font-size:13px;">Loading...</p>`;
+    try {
+      const res = await apiGet("teams/browse.php", { q });
+      renderFindTeamResults(res.teams);
+    } catch (err) {
+      box.innerHTML = `<p class="error-msg">${err.message || t("error_generic")}</p>`;
+    }
+  }
+
+  function renderFindTeamResults(teams) {
+    const box = document.getElementById("find-team-results");
+    if (!teams.length) {
+      box.innerHTML = `<p style="color:var(--text-muted); font-size:13px;">${t("no_open_teams_found")}</p>`;
+      return;
+    }
+    box.innerHTML = teams.map((team) => `
+      <div class="invite-list-item">
+        <div>
+          <div style="font-weight:600;">${escapeHtml(team.name)}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(team.description || "")}</div>
+        </div>
+        <button class="btn ${team.has_pending_request ? "ghost" : ""} small" data-team-id="${team.id}" ${team.has_pending_request ? "disabled" : ""}>
+          ${team.has_pending_request ? t("already_requested_label") : t("request_to_join_button")}
+        </button>
+      </div>
+    `).join("");
+    box.querySelectorAll("button[data-team-id]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const teamId = parseInt(btn.dataset.teamId, 10);
+        btn.disabled = true;
+        try {
+          await apiPost("teams/request_join.php", { team_id: teamId });
+          showToast(t("join_request_sent_toast"));
+          btn.textContent = t("already_requested_label");
+          btn.classList.add("ghost");
+        } catch (err) {
+          btn.disabled = false;
+          showToast(err.message || t("error_generic"));
+        }
+      });
+    });
+  }
+
   // Mobile sidebar drawer.
   document.getElementById("hamburger-btn").addEventListener("click", () => {
     const sidebar = document.getElementById("sidebar");
@@ -1125,6 +1185,33 @@ async function renderAdminTab() {
       </div>
     </div>
 
+    <div class="grid-2">
+      <div class="card">
+        <h2 data-t="team_settings_title">Team settings</h2>
+        <p style="font-size:13px; color:var(--text-muted);" data-t="team_settings_hint"></p>
+        <label data-t="team_name_label">Team name</label>
+        <input type="text" id="team-settings-name" value="${escapeHtml(detail.team.name)}" autocomplete="off" />
+        <div id="team-name-check-msg" style="font-size:12px; margin-top:4px; min-height:16px;"></div>
+        <label data-t="team_desc_label">Description (optional)</label>
+        <input type="text" id="team-settings-desc" value="${escapeHtml(detail.team.description || "")}" autocomplete="off" />
+        <button class="btn small" id="save-team-settings-btn" style="margin-top:12px;" data-t="save_team_settings" disabled>Save changes</button>
+        <div class="error-msg" id="team-settings-error"></div>
+
+        <h2 style="margin-top:24px;" data-t="join_policy_title">Who can join</h2>
+        <p style="font-size:13px; color:var(--text-muted);" data-t="join_policy_hint"></p>
+        <div class="mode-toggle" id="join-policy-toggle">
+          <button data-policy="invite_only">${t("join_policy_invite_only")}<span class="mode-desc">${t("join_policy_invite_only_desc")}</span></button>
+          <button data-policy="open">${t("join_policy_open")}<span class="mode-desc">${t("join_policy_open_desc")}</span></button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 data-t="join_requests_title">Join requests</h2>
+        <p style="font-size:13px; color:var(--text-muted);" data-t="join_requests_hint"></p>
+        <div id="join-requests-list"></div>
+      </div>
+    </div>
+
     <div class="card">
       <h2 data-t="my_teams">Members</h2>
       <div id="members-list"></div>
@@ -1179,6 +1266,135 @@ async function renderAdminTab() {
       }
     });
   });
+
+  // --- team settings: rename + description, with live name-uniqueness check ---
+  const teamNameInput = document.getElementById("team-settings-name");
+  const teamDescInput = document.getElementById("team-settings-desc");
+  const nameCheckMsg = document.getElementById("team-name-check-msg");
+  const saveTeamSettingsBtn = document.getElementById("save-team-settings-btn");
+  const teamSettingsError = document.getElementById("team-settings-error");
+  const originalTeamName = detail.team.name;
+  let nameCheckDebounce = null;
+  let nameIsAvailable = true; // the current saved name is trivially "available" until changed
+
+  function updateSaveButtonState() {
+    const name = teamNameInput.value.trim();
+    saveTeamSettingsBtn.disabled = !name || !nameIsAvailable;
+  }
+  // Initial state: name is unchanged, so the button should already be
+  // enabled — this only locks again if the person types a taken name.
+  updateSaveButtonState();
+
+  teamNameInput.addEventListener("input", () => {
+    clearTimeout(nameCheckDebounce);
+    const name = teamNameInput.value.trim();
+    teamSettingsError.textContent = "";
+    if (!name) {
+      nameCheckMsg.textContent = "";
+      nameCheckMsg.className = "";
+      nameIsAvailable = false;
+      updateSaveButtonState();
+      return;
+    }
+    // Unchanged from the current saved name — no need to ask the server.
+    if (name.toLowerCase() === originalTeamName.toLowerCase()) {
+      nameCheckMsg.textContent = "";
+      nameCheckMsg.className = "";
+      nameIsAvailable = true;
+      updateSaveButtonState();
+      return;
+    }
+    nameCheckMsg.textContent = t("name_checking");
+    nameCheckMsg.className = "";
+    nameCheckDebounce = setTimeout(async () => {
+      try {
+        const res = await apiGet("teams/check_name.php", { name, team_id: teamId });
+        nameIsAvailable = res.available;
+        nameCheckMsg.textContent = t(res.available ? "name_available" : "name_taken");
+        nameCheckMsg.className = res.available ? "success-msg" : "error-msg";
+      } catch (err) {
+        nameIsAvailable = false;
+        nameCheckMsg.textContent = "";
+      }
+      updateSaveButtonState();
+    }, 350);
+  });
+
+  saveTeamSettingsBtn.addEventListener("click", async () => {
+    const name = teamNameInput.value.trim();
+    teamSettingsError.textContent = "";
+    if (!name) {
+      teamSettingsError.textContent = t("name_required");
+      return;
+    }
+    try {
+      await apiPost("teams/update.php", { team_id: teamId, name, description: teamDescInput.value.trim() });
+      showToast(t("saved"));
+      renderMain();
+    } catch (err) {
+      teamSettingsError.textContent = err.message || t("error_generic");
+    }
+  });
+
+  // --- join policy toggle (invite-only vs open — auto-saves like tracking mode) ---
+  const joinPolicyButtons = document.querySelectorAll("#join-policy-toggle button");
+  const currentJoinPolicy = detail.team.join_policy || "invite_only";
+  joinPolicyButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.policy === currentJoinPolicy));
+  joinPolicyButtons.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        await apiPost("teams/set_join_policy.php", { team_id: teamId, join_policy: btn.dataset.policy });
+        showToast(t("saved"));
+        renderMain();
+      } catch (err) {
+        showToast(err.message || t("error_generic"));
+      }
+    });
+  });
+
+  // --- join requests panel ---
+  async function loadJoinRequests() {
+    const box = document.getElementById("join-requests-list");
+    try {
+      const res = await apiGet("teams/join_requests_list.php", { team_id: teamId });
+      if (!res.requests.length) {
+        box.innerHTML = `<p style="color:var(--text-muted); font-size:13px;">${t("no_join_requests")}</p>`;
+        return;
+      }
+      box.innerHTML = res.requests.map((r) => `
+        <div class="invite-list-item">
+          <div>
+            <div style="font-weight:600;">${escapeHtml(r.full_name)}</div>
+            <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(r.email)} &middot; ${t("requested_on_label")} ${formatDateHuman(r.created_at.slice(0, 10))}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn small" data-action="approve" data-id="${r.id}">${t("join_request_accept")}</button>
+            <button class="btn ghost small" data-action="reject" data-id="${r.id}">${t("join_request_reject")}</button>
+          </div>
+        </div>
+      `).join("");
+      box.querySelectorAll("button[data-action]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const requestId = parseInt(btn.dataset.id, 10);
+          const action = btn.dataset.action;
+          try {
+            await apiPost("teams/join_requests_respond.php", { request_id: requestId, action: action === "approve" ? "approve" : "reject" });
+            showToast(t(action === "approve" ? "join_request_approved_toast" : "join_request_rejected_toast"));
+            if (action === "approve") {
+              renderMain();
+            } else {
+              loadJoinRequests();
+            }
+          } catch (err) {
+            showToast(err.message || t("error_generic"));
+          }
+        });
+      });
+    } catch (err) {
+      box.innerHTML = "";
+    }
+  }
+  loadJoinRequests();
 
   // --- invite: user search ---
   const searchInput = document.getElementById("invite-user-search");

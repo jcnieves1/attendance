@@ -37,10 +37,15 @@ CREATE TABLE IF NOT EXISTS users (
 -- this team — most teams only care about Mon-Fri, so keeping this off by
 -- default hides weekend columns everywhere in the UI to save screen space.
 -- ---------------------------------------------------------------------------
+-- name is globally unique (validated live in the Admin area before saving a
+-- rename). join_policy controls whether the team can be found and requested
+-- via "Find a team" ('open') or only reached via a manager's invitation
+-- ('invite_only', the default — unchanged behavior from before).
 CREATE TABLE IF NOT EXISTS teams (
     id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name            VARCHAR(150) NOT NULL,
+    name            VARCHAR(150) NOT NULL UNIQUE,
     description     VARCHAR(255) NULL,
+    join_policy     ENUM('invite_only','open') NOT NULL DEFAULT 'invite_only',
     owner_id        INT UNSIGNED NOT NULL,
     track_weekends  TINYINT(1) NOT NULL DEFAULT 0,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -129,6 +134,24 @@ CREATE TABLE IF NOT EXISTS attendance (
     UNIQUE KEY uniq_user_team_date (user_id, team_id, attendance_date),
     CONSTRAINT fk_attendance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_attendance_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------------
+-- Join requests: a user who found an 'open' team via "Find a team" asks to
+-- join; a team owner/admin accepts or rejects it from the Admin area's
+-- "Join requests" panel. Approval always adds the person as 'employee'.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS join_requests (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    team_id         INT UNSIGNED NOT NULL,
+    user_id         INT UNSIGNED NOT NULL,
+    status          ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    responded_at    DATETIME NULL,
+    CONSTRAINT fk_join_requests_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    CONSTRAINT fk_join_requests_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    KEY idx_join_requests_team_status (team_id, status),
+    KEY idx_join_requests_user_status (user_id, status)
 ) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;

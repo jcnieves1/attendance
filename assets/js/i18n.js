@@ -142,6 +142,41 @@ const DICT = {
     no_members_selected: "No teammates selected",
     teammates_selected_label: "teammates selected",
 
+    // Team settings (rename, description, join policy) — Admin area
+    team_settings_title: "Team settings",
+    team_settings_hint: "Rename your team, update its description, and control who can join.",
+    save_team_settings: "Save changes",
+    name_checking: "Checking availability...",
+    name_available: "This name is available.",
+    name_taken: "That team name is already in use. Please choose another.",
+    name_required: "Please give your team a name.",
+    join_policy_title: "Who can join",
+    join_policy_hint: "Invite-only teams can only be joined via a manager's invitation. Open teams can be found and requested by anyone.",
+    join_policy_invite_only: "Invite only",
+    join_policy_invite_only_desc: "Only by invitation",
+    join_policy_open: "Anyone can join",
+    join_policy_open_desc: "Discoverable via Find a team",
+
+    // Join requests panel — Admin area
+    join_requests_title: "Join requests",
+    join_requests_hint: "People who found your team via \"Find a team\" and asked to join. Approving adds them as an employee.",
+    no_join_requests: "No pending join requests right now.",
+    requested_on_label: "Requested",
+    join_request_accept: "Accept",
+    join_request_reject: "Reject",
+    join_request_approved_toast: "Request approved — they've joined the team.",
+    join_request_rejected_toast: "Request rejected.",
+
+    // Find a team (discover + request to join 'open' teams)
+    find_team_button: "Find a team",
+    find_team_title: "Find a team to join",
+    find_team_hint: "Search teams that are open for anyone to join.",
+    find_team_search_placeholder: "Search teams by name...",
+    no_open_teams_found: "No open teams found.",
+    request_to_join_button: "Request to join",
+    already_requested_label: "Requested",
+    join_request_sent_toast: "Your request to join has been sent.",
+
     // Misc / errors
     loading: "Loading...",
     save: "Save",
@@ -296,6 +331,41 @@ const DICT = {
     all_team: "Todo el equipo",
     no_members_selected: "Ningún compañero seleccionado",
     teammates_selected_label: "compañeros seleccionados",
+
+    // Configuración del equipo (nombre, descripción, política de ingreso)
+    team_settings_title: "Configuración del equipo",
+    team_settings_hint: "Cambia el nombre del equipo, su descripción y quién puede unirse.",
+    save_team_settings: "Guardar cambios",
+    name_checking: "Comprobando disponibilidad...",
+    name_available: "Este nombre está disponible.",
+    name_taken: "Ese nombre de equipo ya está en uso. Elige otro.",
+    name_required: "Ponle un nombre a tu equipo.",
+    join_policy_title: "Quién puede unirse",
+    join_policy_hint: "Los equipos solo por invitación solo se pueden unir mediante invitación de un gerente. Los equipos abiertos se pueden encontrar y solicitar por cualquiera.",
+    join_policy_invite_only: "Solo por invitación",
+    join_policy_invite_only_desc: "Solo por invitación",
+    join_policy_open: "Cualquiera puede unirse",
+    join_policy_open_desc: "Visible en Buscar un equipo",
+
+    // Panel de solicitudes de ingreso — Área de administración
+    join_requests_title: "Solicitudes de ingreso",
+    join_requests_hint: "Personas que encontraron tu equipo con \"Buscar un equipo\" y pidieron unirse. Aprobar los agrega como empleados.",
+    no_join_requests: "No hay solicitudes de ingreso pendientes.",
+    requested_on_label: "Solicitado",
+    join_request_accept: "Aceptar",
+    join_request_reject: "Rechazar",
+    join_request_approved_toast: "Solicitud aprobada: ya se unió al equipo.",
+    join_request_rejected_toast: "Solicitud rechazada.",
+
+    // Buscar un equipo (descubrir y solicitar unirse a equipos abiertos)
+    find_team_button: "Buscar un equipo",
+    find_team_title: "Buscar un equipo para unirte",
+    find_team_hint: "Busca equipos abiertos para que cualquiera se una.",
+    find_team_search_placeholder: "Buscar equipos por nombre...",
+    no_open_teams_found: "No se encontraron equipos abiertos.",
+    request_to_join_button: "Solicitar unirme",
+    already_requested_label: "Solicitado",
+    join_request_sent_toast: "Tu solicitud para unirte ha sido enviada.",
 
     loading: "Cargando...",
     save: "Guardar",
