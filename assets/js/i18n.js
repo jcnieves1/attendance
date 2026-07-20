@@ -97,6 +97,11 @@ const DICT = {
     favorite_days_title: "My favorite office days",
     favorite_days_hint: "Your own personal preference — doesn't have to match the manager's suggestion.",
     save_favorites: "Save my favorites",
+    default_team_title: "Default team",
+    default_team_hint: "The team you land on automatically the next time you log in.",
+    default_team_checkbox_label: "Make this my default team when I log in",
+    default_team_set_toast: "This is now your default team.",
+    default_team_cleared_toast: "Default team cleared.",
 
     // Weekday / calendar tracking mode
     tracking_mode_title: "Days tracked",
@@ -318,6 +323,11 @@ const DICT = {
     favorite_days_title: "Mis días favoritos de oficina",
     favorite_days_hint: "Tu preferencia personal — no tiene que coincidir con la sugerencia del gerente.",
     save_favorites: "Guardar mis favoritos",
+    default_team_title: "Equipo predeterminado",
+    default_team_hint: "El equipo en el que entrarás automáticamente la próxima vez que inicies sesión.",
+    default_team_checkbox_label: "Hacer que este sea mi equipo predeterminado al iniciar sesión",
+    default_team_set_toast: "Este ya es tu equipo predeterminado.",
+    default_team_cleared_toast: "Equipo predeterminado eliminado.",
 
     tracking_mode_title: "Días registrados",
     tracking_mode_hint: "Elige si este equipo registra solo de lunes a viernes o la semana completa — esto oculta los días que no necesitas en toda la app.",

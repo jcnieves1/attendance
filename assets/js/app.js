@@ -185,7 +185,20 @@ async function boot() {
 
 function wireThemeDots() {
   document.querySelectorAll(".theme-dot").forEach((dot) => {
-    dot.addEventListener("click", () => setTheme(dot.dataset.theme));
+    dot.addEventListener("click", async () => {
+      setTheme(dot.dataset.theme);
+      // Persist to the account (not just localStorage) so the choice follows
+      // this user specifically — the same pattern as the language selector —
+      // instead of just sticking to whichever browser/device they're on.
+      if (APP.user) {
+        try {
+          await apiPost("auth/update_profile.php", { theme: dot.dataset.theme });
+          APP.user.theme = dot.dataset.theme;
+        } catch (e) {
+          // Non-fatal: the theme still applies locally for this session.
+        }
+      }
+    });
   });
 }
 
@@ -610,7 +623,11 @@ async function loadSidebarData() {
     renderInvitationsBadge();
 
     if (!APP.currentTeamId && APP.teams.length) {
-      selectTeam(APP.teams[0].id);
+      // Prefer the user's chosen default team (if they still belong to it)
+      // over just picking the first one alphabetically.
+      const defaultTeamId = APP.user && APP.user.default_team_id;
+      const defaultStillValid = defaultTeamId && APP.teams.some((team) => team.id === defaultTeamId);
+      selectTeam(defaultStillValid ? defaultTeamId : APP.teams[0].id);
     } else if (!APP.teams.length) {
       renderMain();
     }
@@ -908,6 +925,14 @@ async function renderWeekTab() {
       <div class="checkbox-days" id="favorite-days-box"></div>
       <button class="btn small" id="save-favorites-btn" style="margin-top:12px;" data-t="save_favorites">Save my favorites</button>
     </div>
+    <div class="card">
+      <h3 data-t="default_team_title">Default team</h3>
+      <p style="font-size:13px; color:var(--text-muted);" data-t="default_team_hint"></p>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+        <input type="checkbox" id="default-team-checkbox" />
+        <span data-t="default_team_checkbox_label">Make this my default team when I log in</span>
+      </label>
+    </div>
   `;
   applyTranslations();
 
@@ -954,6 +979,21 @@ async function renderWeekTab() {
       showToast(t("saved"));
       renderWeekTab();
     } catch (err) {
+      showToast(err.message || t("error_generic"));
+    }
+  });
+
+  // --- default team (auto-selected on login) ---
+  const defaultTeamCheckbox = document.getElementById("default-team-checkbox");
+  defaultTeamCheckbox.checked = !!(APP.user && APP.user.default_team_id === teamId);
+  defaultTeamCheckbox.addEventListener("change", async (e) => {
+    const wantsDefault = e.target.checked;
+    try {
+      await apiPost("auth/set_default_team.php", { team_id: wantsDefault ? teamId : null });
+      if (APP.user) APP.user.default_team_id = wantsDefault ? teamId : null;
+      showToast(t(wantsDefault ? "default_team_set_toast" : "default_team_cleared_toast"));
+    } catch (err) {
+      e.target.checked = !wantsDefault; // revert the checkbox on failure
       showToast(err.message || t("error_generic"));
     }
   });

@@ -34,6 +34,23 @@ try {
     $pdo->prepare('DELETE FROM attendance WHERE team_id = ? AND user_id = ?')->execute([$teamId, $targetUserId]);
     $pdo->prepare('DELETE FROM team_members WHERE team_id = ? AND user_id = ?')->execute([$teamId, $targetUserId]);
     create_notification($targetUserId, 'removed_from_team', $teamId, $teamName);
+
+    // If this was the removed person's default (auto-selected-on-login)
+    // team, it can't stay pointed at a team they're no longer in — fall back
+    // to another team they still belong to, or clear it if none are left.
+    $stmt = $pdo->prepare('SELECT default_team_id FROM users WHERE id = ?');
+    $stmt->execute([$targetUserId]);
+    $targetDefaultTeamId = (int) $stmt->fetchColumn();
+    if ($targetDefaultTeamId === $teamId) {
+        $stmt = $pdo->prepare(
+            'SELECT team_id FROM team_members WHERE user_id = ? AND status = "active" ORDER BY joined_at ASC LIMIT 1'
+        );
+        $stmt->execute([$targetUserId]);
+        $newDefaultTeamId = $stmt->fetchColumn();
+        $pdo->prepare('UPDATE users SET default_team_id = ? WHERE id = ?')
+            ->execute([$newDefaultTeamId ?: null, $targetUserId]);
+    }
+
     $pdo->commit();
 } catch (Throwable $e) {
     $pdo->rollBack();

@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name            VARCHAR(150) NOT NULL,
     language             ENUM('en','es') NOT NULL DEFAULT 'en',
     theme                VARCHAR(30) NOT NULL DEFAULT 'sunrise',
+    default_team_id      INT UNSIGNED NULL COMMENT 'team auto-selected on login, if still a member of it',
     security_question    VARCHAR(150) NULL,
     security_answer_hash VARCHAR(255) NULL,
     created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -55,6 +56,11 @@ CREATE TABLE IF NOT EXISTS teams (
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_teams_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- users.default_team_id references teams, so this FK is added here rather
+-- than inline on the users table above, which is defined before teams exists.
+ALTER TABLE users
+    ADD CONSTRAINT fk_users_default_team FOREIGN KEY (default_team_id) REFERENCES teams(id) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------
 -- Team membership + role. 'owner' = the manager who created the team.

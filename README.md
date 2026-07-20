@@ -131,6 +131,15 @@ mysql -u root -p officepal < database/migrate_v7_auto_accept.sql
 It adds `teams.auto_accept_join_requests` (off by default) and widens
 `notifications.type` further to add `auto_joined` and `join_auto_approved`.
 
+If you're upgrading further to add a personal default team, also run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v8_default_team.sql
+```
+
+It adds a nullable `users.default_team_id` (FK to `teams.id`, `ON DELETE SET
+NULL`) — the team automatically selected the next time that user logs in.
+
 ## 2. Configure the app
 
 Edit `api/config.php` (or set the equivalent environment variables — handy if
@@ -209,6 +218,16 @@ your machine's local IP, to try the mobile layout).
     their own — no approval step. The team's owner/admins still get a 🔔
     notification about it, with a **Manage users** button that jumps to the
     Admin area's Members list so they stay aware of who joined.
+18. Your color theme (the dots in the topbar) and language now follow your
+    account, not just the browser — switch either one, log out, and log back
+    in (or as a different account on the same browser) to see it stick per
+    person.
+19. On the **This week** tab, below **My favorite office days**, check
+    **Make this my default team when I log in** — if you belong to more than
+    one team, this is the one you'll land on automatically next time you log
+    in. If an admin ever removes you from that team, your default
+    automatically falls back to another team you still belong to (or clears
+    if that was your only one).
 
 ## Project structure
 
@@ -231,6 +250,7 @@ OfficePal/
     migrate_v6_join_response_notifications.sql
                                        Upgrade path: notify on approve/reject
     migrate_v7_auto_accept.sql        Upgrade path: auto-accept join requests
+    migrate_v8_default_team.sql       Upgrade path: personal default team
 ```
 
 ## Notes on the design

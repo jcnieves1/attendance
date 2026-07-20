@@ -65,7 +65,7 @@ function current_user(): ?array
     if (!$userId) {
         return null;
     }
-    $stmt = db()->prepare('SELECT id, email, full_name, language, theme, security_question, created_at FROM users WHERE id = ?');
+    $stmt = db()->prepare('SELECT id, email, full_name, language, theme, default_team_id, security_question, created_at FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
     return $user ?: null;
