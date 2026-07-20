@@ -273,6 +273,7 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 .day-cell .tag { font-size: 10px; margin-top: 4px; display: inline-block; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: #fff; }
 .day-cell.favorite .fav-star { position: absolute; top: 4px; right: 6px; font-size: 12px; }
 .day-cell.disabled { opacity: 0.45; cursor: not-allowed; }
+.day-cell.disabled:hover { transform: none; }
 
 /* ---------------- Heatmap (yearly dashboard) ---------------- */
 .heatmap { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 14px); gap: 3px; overflow-x: auto; padding-bottom: 8px; }

@@ -21,8 +21,18 @@ const MONTH_KEYS = [
 
 /* ----------------------------- date helpers ----------------------------- */
 
+/**
+ * Formats a Date as a Y-m-d string using the browser's LOCAL calendar date —
+ * deliberately not toISOString(), which converts to UTC first and can land
+ * on the wrong day for anyone west of Greenwich in the evening (e.g. 8pm in
+ * US Pacific is already after midnight UTC). Attendance is a local-calendar
+ * concept — "today" always means today on the user's own clock.
+ */
 function ymd(date) {
-  return date.toISOString().slice(0, 10);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 function mondayOf(date) {
   const d = new Date(date);
@@ -676,22 +686,32 @@ async function renderWeekTab() {
   applyTranslations();
 
   const grid = document.getElementById("week-grid");
+  const todayStr = ymd(new Date());
   weekDates.forEach((date, i) => {
     const dstr = ymd(date);
     const isChecked = checkedDates.has(dstr);
     const isSuggested = suggestedDows.has(i);
     const isFavorite = favoriteDows.has(i);
+    // Future days are read-only — you can't log attendance for a day that
+    // hasn't happened yet. Compared against the browser's own clock, never
+    // the server's, so this always matches what the user sees on their
+    // computer right now.
+    const isFuture = dstr > todayStr;
 
     const cell = document.createElement("div");
-    cell.className = "day-cell" + (isChecked ? " checked-in" : "") + (isSuggested ? " suggested" : "") + (isFavorite ? " favorite" : "");
+    cell.className = "day-cell" + (isChecked ? " checked-in" : "") + (isSuggested ? " suggested" : "") + (isFavorite ? " favorite" : "") + (isFuture ? " disabled" : "");
     cell.innerHTML = `
       ${isFavorite ? '<span class="fav-star">★</span>' : ""}
       <div class="dow">${t(DAY_KEYS[i])}</div>
       <div class="dnum">${date.getDate()}</div>
       ${isSuggested ? `<span class="tag">${t("suggested_tag")}</span>` : ""}
     `;
-    cell.title = isChecked ? t("tap_to_undo") : t("tap_to_checkin");
-    cell.addEventListener("click", () => onDayCellClick(teamId, dstr, isChecked));
+    if (isFuture) {
+      cell.title = t("future_day_hint");
+    } else {
+      cell.title = isChecked ? t("tap_to_undo") : t("tap_to_checkin");
+      cell.addEventListener("click", () => onDayCellClick(teamId, dstr, isChecked));
+    }
     grid.appendChild(cell);
   });
 
