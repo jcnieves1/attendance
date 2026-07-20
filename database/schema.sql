@@ -187,4 +187,21 @@ CREATE TABLE IF NOT EXISTS notifications (
     KEY idx_notifications_user_status (user_id, status)
 ) ENGINE=InnoDB;
 
+-- ---------------------------------------------------------------------------
+-- Login attempts: backs the login page's brute-force guard. Every login POST
+-- (success or failure) is logged with the email tried, the caller's IP, and
+-- a timestamp; api/auth/login.php blocks further tries for an email once it
+-- sees 5+ failures in the last 15 minutes. Paired with a math CAPTCHA
+-- challenge (session-only, never stored here — see api/helpers.php) that
+-- must be solved fresh on every attempt.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email       VARCHAR(190) NOT NULL,
+    ip_address  VARCHAR(45) NULL,
+    success     TINYINT(1) NOT NULL DEFAULT 0,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_login_attempts_email_time (email, created_at)
+) ENGINE=InnoDB;
+
 SET FOREIGN_KEY_CHECKS = 1;

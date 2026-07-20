@@ -181,3 +181,44 @@ function manager_user_ids_for_team(int $teamId): array
     $stmt->execute([$teamId]);
     return array_map('intval', array_column($stmt->fetchAll(), 'user_id'));
 }
+
+/**
+ * Generates a small arithmetic challenge for the login page — a lightweight
+ * CAPTCHA meant to slow down scripted/bulk login attempts without requiring
+ * any third-party service or API key. The expected answer is stashed
+ * server-side in the session only; the client only ever sees the two
+ * numbers to add. Returns ['a' => int, 'b' => int] for the frontend to
+ * render as a localized "What is {a} + {b}?" question.
+ */
+function generate_captcha_challenge(): array
+{
+    start_session();
+    $a = random_int(1, 10);
+    $b = random_int(1, 10);
+    $_SESSION['captcha_answer'] = $a + $b;
+    $_SESSION['captcha_generated_at'] = time();
+    return ['a' => $a, 'b' => $b];
+}
+
+/**
+ * Checks a submitted captcha answer against the one generate_captcha_challenge()
+ * stashed in the session, then always clears it — right or wrong — so a
+ * single challenge can never be replayed across multiple login attempts.
+ * Also rejects anything older than 10 minutes, so a long-abandoned page
+ * can't be used to skip solving a fresh one.
+ */
+function verify_captcha_answer($submitted): bool
+{
+    start_session();
+    $expected = $_SESSION['captcha_answer'] ?? null;
+    $generatedAt = $_SESSION['captcha_generated_at'] ?? 0;
+    unset($_SESSION['captcha_answer'], $_SESSION['captcha_generated_at']);
+
+    if ($expected === null || $submitted === null || $submitted === '') {
+        return false;
+    }
+    if (time() - $generatedAt > 600) {
+        return false;
+    }
+    return is_numeric($submitted) && (int) $submitted === (int) $expected;
+}

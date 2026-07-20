@@ -140,6 +140,19 @@ mysql -u root -p officepal < database/migrate_v8_default_team.sql
 It adds a nullable `users.default_team_id` (FK to `teams.id`, `ON DELETE SET
 NULL`) — the team automatically selected the next time that user logs in.
 
+If you're upgrading further to add the login page's CAPTCHA + brute-force
+guard, also run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v9_login_attempts.sql
+```
+
+It adds a `login_attempts` table (email, IP, success, timestamp) that
+`api/auth/login.php` uses to block further tries once an email has 5+ failed
+attempts in the last 15 minutes. The CAPTCHA answer itself is never stored in
+the database — it lives only in the PHP session between fetching the
+challenge and submitting the form.
+
 ## 2. Configure the app
 
 Edit `api/config.php` (or set the equivalent environment variables — handy if
@@ -228,6 +241,12 @@ your machine's local IP, to try the mobile layout).
     in. If an admin ever removes you from that team, your default
     automatically falls back to another team you still belong to (or clears
     if that was your only one).
+20. On the login screen, notice the small "What is X + Y?" security check
+    below the password field — it must be answered correctly on every login
+    attempt, and a wrong password or a wrong answer both serve up a fresh
+    question. Five failed attempts for the same email within 15 minutes
+    temporarily blocks further tries, as a basic guard against scripted
+    brute-force login attempts.
 
 ## Project structure
 
@@ -251,6 +270,7 @@ OfficePal/
                                        Upgrade path: notify on approve/reject
     migrate_v7_auto_accept.sql        Upgrade path: auto-accept join requests
     migrate_v8_default_team.sql       Upgrade path: personal default team
+    migrate_v9_login_attempts.sql     Upgrade path: login CAPTCHA + rate limit
 ```
 
 ## Notes on the design

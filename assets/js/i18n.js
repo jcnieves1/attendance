@@ -26,6 +26,9 @@ const DICT = {
     need_account: "Need an account?",
     continue: "Continue",
     weak_password_error: "Password must be at least 8 characters.",
+    captcha_loading: "Loading security check...",
+    captcha_question: "Security check: what is {a} + {b}?",
+    captcha_load_error: "Couldn't load the security check. Please refresh the page.",
 
     // Forgot password / security question / account settings
     forgot_password_link: "Forgot your password?",
@@ -276,6 +279,9 @@ const DICT = {
     need_account: "¿Necesitas una cuenta?",
     continue: "Continuar",
     weak_password_error: "La contraseña debe tener al menos 8 caracteres.",
+    captcha_loading: "Cargando verificación de seguridad...",
+    captcha_question: "Verificación de seguridad: ¿cuánto es {a} + {b}?",
+    captcha_load_error: "No se pudo cargar la verificación de seguridad. Actualiza la página.",
 
     // Olvidé mi contraseña / pregunta de seguridad / ajustes de cuenta
     forgot_password_link: "¿Olvidaste tu contraseña?",

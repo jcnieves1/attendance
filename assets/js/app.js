@@ -169,6 +169,7 @@ async function boot() {
   wireAuthForms();
   wireForgotPassword();
   wireStaticButtons();
+  loadLoginCaptcha();
 
   try {
     const res = await apiGet("auth/me.php");
@@ -217,6 +218,25 @@ function wireLangSelectors() {
   });
 }
 
+/**
+ * Fetches a fresh math CAPTCHA challenge for the login form and renders it
+ * as a localized "What is {a} + {b}?" question. Called once at boot and
+ * again after every failed login attempt — the server invalidates the old
+ * challenge on each submit either way, so a stale question on screen would
+ * just fail regardless.
+ */
+async function loadLoginCaptcha() {
+  const label = document.getElementById("login-captcha-question");
+  if (!label) return;
+  label.textContent = t("captcha_loading");
+  try {
+    const res = await apiGet("auth/captcha.php");
+    label.textContent = t("captcha_question").replace("{a}", res.a).replace("{b}", res.b);
+  } catch (e) {
+    label.textContent = t("captcha_load_error");
+  }
+}
+
 function showAuthScreen() {
   document.getElementById("auth-screen").classList.remove("hidden");
   document.getElementById("app-shell").classList.add("hidden");
@@ -246,12 +266,17 @@ function wireAuthForms() {
       await apiPost("auth/login.php", {
         email: document.getElementById("login-email").value,
         password: document.getElementById("login-password").value,
+        captcha_answer: document.getElementById("login-captcha-answer").value,
       });
       const me = await apiGet("auth/me.php");
       APP.user = me.user;
       enterApp();
     } catch (err) {
       errorEl.textContent = err.message || t("login_error");
+      // The server consumes the CAPTCHA challenge on every attempt (right or
+      // wrong), so a fresh one is needed before they can try again.
+      document.getElementById("login-captcha-answer").value = "";
+      loadLoginCaptcha();
     }
   });
 
