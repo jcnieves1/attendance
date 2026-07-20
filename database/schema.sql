@@ -41,11 +41,15 @@ CREATE TABLE IF NOT EXISTS users (
 -- rename). join_policy controls whether the team can be found and requested
 -- via "Find a team" ('open') or only reached via a manager's invitation
 -- ('invite_only', the default — unchanged behavior from before).
+-- auto_accept_join_requests only matters for 'open' teams: when on, a "Find a
+-- team" request is approved immediately (no admin action needed) instead of
+-- waiting in the Join requests panel.
 CREATE TABLE IF NOT EXISTS teams (
-    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name            VARCHAR(150) NOT NULL UNIQUE,
-    description     VARCHAR(255) NULL,
-    join_policy     ENUM('invite_only','open') NOT NULL DEFAULT 'invite_only',
+    id                          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name                        VARCHAR(150) NOT NULL UNIQUE,
+    description                 VARCHAR(255) NULL,
+    join_policy                 ENUM('invite_only','open') NOT NULL DEFAULT 'invite_only',
+    auto_accept_join_requests   TINYINT(1) NOT NULL DEFAULT 0,
     owner_id        INT UNSIGNED NOT NULL,
     track_weekends  TINYINT(1) NOT NULL DEFAULT 0,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -164,7 +168,7 @@ CREATE TABLE IF NOT EXISTS join_requests (
 CREATE TABLE IF NOT EXISTS notifications (
     id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id         INT UNSIGNED NOT NULL COMMENT 'recipient',
-    type            ENUM('removed_from_team','join_request','join_request_approved','join_request_rejected') NOT NULL,
+    type            ENUM('removed_from_team','join_request','join_request_approved','join_request_rejected','auto_joined','join_auto_approved') NOT NULL,
     team_id         INT UNSIGNED NULL,
     team_name       VARCHAR(150) NOT NULL,
     actor_name      VARCHAR(150) NULL COMMENT 'e.g. the requester (join_request) or the responding admin (join_request_approved/rejected)',

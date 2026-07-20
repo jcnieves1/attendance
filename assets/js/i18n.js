@@ -156,6 +156,12 @@ const DICT = {
     join_policy_invite_only_desc: "Only by invitation",
     join_policy_open: "Anyone can join",
     join_policy_open_desc: "Discoverable via Find a team",
+    auto_accept_title: "Auto-accept join requests",
+    auto_accept_hint: "When on, anyone who finds this team via \"Find a team\" joins immediately as an employee — no admin approval needed. You'll still get notified so you're aware.",
+    auto_accept_off: "Off",
+    auto_accept_off_desc: "Requests need admin approval",
+    auto_accept_on: "On",
+    auto_accept_on_desc: "Requests are approved instantly",
 
     // Join requests panel — Admin area
     join_requests_title: "Join requests",
@@ -175,7 +181,9 @@ const DICT = {
     no_open_teams_found: "No open teams found.",
     request_to_join_button: "Request to join",
     already_requested_label: "Requested",
+    already_joined_label: "Joined!",
     join_request_sent_toast: "Your request to join has been sent.",
+    join_auto_approved_toast: "You've joined the team!",
 
     // Notifications (🔔 bell) + remove-member confirm dialog
     notifications_title: "Notifications",
@@ -184,8 +192,11 @@ const DICT = {
     notif_join_request_message: "{name} wants to join the team \"{team}\".",
     notif_join_approved_message: "🎉 Great news! {actor} approved your request to join \"{team}\". Welcome aboard!",
     notif_join_rejected_message: "Unfortunately, {actor} rejected your request to join \"{team}\". If you have questions, please contact them at {email}.",
+    notif_auto_joined_message: "{name} joined your team directly using the search group feature. Click here to manage users.",
+    notif_join_auto_approved_message: "🎉 Welcome to \"{team}\"! Your request was automatically approved — you're officially part of the team.",
     acknowledge_button: "Acknowledge",
     review_button: "Review",
+    manage_users_button: "Manage users",
     confirm_remove_member_title: "Remove team member?",
     confirm_remove_member_message: "This will permanently delete their attendance history for this team. This action cannot be undone.",
     member_removed_toast: "Teammate removed.",
@@ -359,6 +370,12 @@ const DICT = {
     join_policy_invite_only_desc: "Solo por invitación",
     join_policy_open: "Cualquiera puede unirse",
     join_policy_open_desc: "Visible en Buscar un equipo",
+    auto_accept_title: "Aceptar solicitudes automáticamente",
+    auto_accept_hint: "Si está activado, cualquiera que encuentre este equipo con \"Buscar un equipo\" se une de inmediato como empleado, sin necesidad de aprobación. Igual recibirás una notificación para que estés al tanto.",
+    auto_accept_off: "Desactivado",
+    auto_accept_off_desc: "Las solicitudes necesitan aprobación",
+    auto_accept_on: "Activado",
+    auto_accept_on_desc: "Las solicitudes se aprueban al instante",
 
     // Panel de solicitudes de ingreso — Área de administración
     join_requests_title: "Solicitudes de ingreso",
@@ -378,7 +395,9 @@ const DICT = {
     no_open_teams_found: "No se encontraron equipos abiertos.",
     request_to_join_button: "Solicitar unirme",
     already_requested_label: "Solicitado",
+    already_joined_label: "¡Unido!",
     join_request_sent_toast: "Tu solicitud para unirte ha sido enviada.",
+    join_auto_approved_toast: "¡Te has unido al equipo!",
 
     // Notificaciones (campana 🔔) + confirmación para quitar un miembro
     notifications_title: "Notificaciones",
@@ -387,8 +406,11 @@ const DICT = {
     notif_join_request_message: "{name} quiere unirse al equipo \"{team}\".",
     notif_join_approved_message: "🎉 ¡Buenas noticias! {actor} aprobó tu solicitud para unirte a \"{team}\". ¡Bienvenido!",
     notif_join_rejected_message: "Lamentablemente, {actor} rechazó tu solicitud para unirte a \"{team}\". Si tienes preguntas, contáctalo en {email}.",
+    notif_auto_joined_message: "{name} se unió a tu equipo directamente usando la función de buscar equipos. Haz clic aquí para administrar usuarios.",
+    notif_join_auto_approved_message: "🎉 ¡Bienvenido a \"{team}\"! Tu solicitud fue aprobada automáticamente: ya eres parte del equipo.",
     acknowledge_button: "Entendido",
     review_button: "Revisar",
+    manage_users_button: "Administrar usuarios",
     confirm_remove_member_title: "¿Quitar a este miembro del equipo?",
     confirm_remove_member_message: "Esto eliminará permanentemente su historial de asistencia para este equipo. Esta acción no se puede deshacer.",
     member_removed_toast: "Miembro eliminado.",

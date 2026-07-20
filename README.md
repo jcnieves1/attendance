@@ -122,6 +122,15 @@ It widens `notifications.type` to add `join_request_approved` and
 `join_request_rejected`, and adds a nullable `notifications.actor_email`
 column (so a rejection notification can tell the person who to contact).
 
+If you're upgrading further to add "Auto-accept join requests", also run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v7_auto_accept.sql
+```
+
+It adds `teams.auto_accept_join_requests` (off by default) and widens
+`notifications.type` further to add `auto_joined` and `join_auto_approved`.
+
 ## 2. Configure the app
 
 Edit `api/config.php` (or set the equivalent environment variables — handy if
@@ -193,6 +202,13 @@ your machine's local IP, to try the mobile layout).
     that team and can't be undone. Once confirmed, they'll see a 🔔
     notification the next time they open the app, with an **Acknowledge**
     button to dismiss it.
+17. Back in **Team settings** → **Who can join**, with the team still set to
+    **Anyone can join**, flip **Auto-accept join requests** to **On**. Have a
+    third account **Find a team** → **Request to join** it again: this time
+    they're added immediately, with a cheerful 🔔 welcome notification of
+    their own — no approval step. The team's owner/admins still get a 🔔
+    notification about it, with a **Manage users** button that jumps to the
+    Admin area's Members list so they stay aware of who joined.
 
 ## Project structure
 
@@ -214,6 +230,7 @@ OfficePal/
     migrate_v5_notifications.sql      Upgrade path: adds notifications table
     migrate_v6_join_response_notifications.sql
                                        Upgrade path: notify on approve/reject
+    migrate_v7_auto_accept.sql        Upgrade path: auto-accept join requests
 ```
 
 ## Notes on the design

@@ -417,9 +417,17 @@ function wireStaticButtons() {
         const teamId = parseInt(btn.dataset.teamId, 10);
         btn.disabled = true;
         try {
-          await apiPost("teams/request_join.php", { team_id: teamId });
-          showToast(t("join_request_sent_toast"));
-          btn.textContent = t("already_requested_label");
+          const res = await apiPost("teams/request_join.php", { team_id: teamId });
+          if (res.auto_approved) {
+            // Auto-accept teams add the person right away — refresh the
+            // sidebar so the new team shows up without needing a reload.
+            showToast(t("join_auto_approved_toast"));
+            btn.textContent = t("already_joined_label");
+            await loadSidebarData();
+          } else {
+            showToast(t("join_request_sent_toast"));
+            btn.textContent = t("already_requested_label");
+          }
           btn.classList.add("ghost");
         } catch (err) {
           btn.disabled = false;
@@ -667,6 +675,14 @@ function renderInvitationsModal() {
   renderNotificationsModalList();
 }
 
+// Notification types that take you somewhere (vs. a plain Acknowledge),
+// each paired with the Admin-area element worth scrolling into view once
+// you land there.
+const NOTIF_NAV_TARGETS = {
+  join_request: "join-requests-list",
+  auto_joined: "members-list",
+};
+
 /** Builds the display text for one 🔔 notification, based on its type. */
 function buildNotificationMessage(n) {
   const team = escapeHtml(n.team_name);
@@ -681,6 +697,10 @@ function buildNotificationMessage(n) {
       const emailHtml = email ? `<a href="mailto:${email}">${email}</a>` : "";
       return t("notif_join_rejected_message").replace("{actor}", actor).replace("{team}", team).replace("{email}", emailHtml);
     }
+    case "auto_joined":
+      return t("notif_auto_joined_message").replace("{name}", actor);
+    case "join_auto_approved":
+      return t("notif_join_auto_approved_message").replace("{team}", team);
     default: // removed_from_team
       return t("notif_removed_message").replace("{team}", team);
   }
@@ -689,9 +709,11 @@ function buildNotificationMessage(n) {
 /**
  * Renders the informational 🔔 notifications (distinct from invitations,
  * which have their own accept/decline flow above): a teammate being removed
- * from a team, someone waiting on a join-request decision, or a requester
- * being told their own join request was approved/rejected. All but the
- * join-request-pending case are plain "Acknowledge" — mark read and move on.
+ * from a team, someone waiting on a join-request decision (or told about a
+ * direct auto-join), or a requester being told their own join request was
+ * approved/rejected — automatically or by an admin. Anything in
+ * NOTIF_NAV_TARGETS jumps into the Admin area; everything else is a plain
+ * "Acknowledge" that just marks it read.
  */
 function renderNotificationsModalList() {
   const box = document.getElementById("notifications-modal-list");
@@ -701,15 +723,18 @@ function renderNotificationsModalList() {
   }
   box.innerHTML = APP.notifications.map((n) => {
     const message = buildNotificationMessage(n);
-    const actionLabel = n.type === "join_request" ? t("review_button") : t("acknowledge_button");
-    const actionAttr = n.type === "join_request" ? `data-action="review" data-team-id="${n.team_id || ""}"` : `data-action="acknowledge"`;
+    const isNavigable = Object.prototype.hasOwnProperty.call(NOTIF_NAV_TARGETS, n.type);
+    const actionLabel = n.type === "auto_joined" ? t("manage_users_button") : (isNavigable ? t("review_button") : t("acknowledge_button"));
+    const actionAttr = isNavigable
+      ? `data-action="review" data-team-id="${n.team_id || ""}" data-focus="${NOTIF_NAV_TARGETS[n.type]}"`
+      : `data-action="acknowledge"`;
     return `
       <div class="invite-list-item">
         <div>
           <div>${message}</div>
         </div>
         <div style="display:flex; gap:6px;">
-          <button class="btn ${n.type === "join_request" ? "" : "ghost"} small" data-id="${n.id}" ${actionAttr}>${actionLabel}</button>
+          <button class="btn ${isNavigable ? "" : "ghost"} small" data-id="${n.id}" ${actionAttr}>${actionLabel}</button>
         </div>
       </div>
     `;
@@ -725,7 +750,7 @@ function renderNotificationsModalList() {
         renderInvitationsBadge();
         if (action === "review" && btn.dataset.teamId) {
           closeModal("modal-invitations");
-          await goToTeamAdminArea(parseInt(btn.dataset.teamId, 10));
+          await goToTeamAdminArea(parseInt(btn.dataset.teamId, 10), btn.dataset.focus);
         } else {
           renderNotificationsModalList();
         }
@@ -736,12 +761,22 @@ function renderNotificationsModalList() {
   });
 }
 
-/** Jumps straight to a team's Admin area — used by the join-request notification's "Review" action. */
-async function goToTeamAdminArea(teamId) {
+/**
+ * Jumps straight to a team's Admin area — used by the notification bell's
+ * navigable actions (a pending join request to review, or an FYI about
+ * someone who auto-joined). focusElementId, if given, is scrolled into view
+ * once the Admin area has rendered, so the person lands right on the
+ * relevant panel (Join requests or Members) instead of the top of the page.
+ */
+async function goToTeamAdminArea(teamId, focusElementId) {
   APP.currentTeamId = teamId;
   APP.currentTab = "admin";
   renderSidebar();
   await renderMain();
+  if (focusElementId) {
+    const el = document.getElementById(focusElementId);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 async function selectTeam(teamId) {
@@ -1308,6 +1343,15 @@ async function renderAdminTab() {
           <button data-policy="invite_only">${t("join_policy_invite_only")}<span class="mode-desc">${t("join_policy_invite_only_desc")}</span></button>
           <button data-policy="open">${t("join_policy_open")}<span class="mode-desc">${t("join_policy_open_desc")}</span></button>
         </div>
+
+        ${detail.team.join_policy === "open" ? `
+          <h2 style="margin-top:24px;" data-t="auto_accept_title">Auto-accept join requests</h2>
+          <p style="font-size:13px; color:var(--text-muted);" data-t="auto_accept_hint"></p>
+          <div class="mode-toggle" id="auto-accept-toggle">
+            <button data-auto="0">${t("auto_accept_off")}<span class="mode-desc">${t("auto_accept_off_desc")}</span></button>
+            <button data-auto="1">${t("auto_accept_on")}<span class="mode-desc">${t("auto_accept_on_desc")}</span></button>
+          </div>
+        ` : ""}
       </div>
 
       <div class="card">
@@ -1456,6 +1500,25 @@ async function renderAdminTab() {
       }
     });
   });
+
+  // --- auto-accept join requests toggle (only shown while join_policy is "open") ---
+  const autoAcceptToggle = document.getElementById("auto-accept-toggle");
+  if (autoAcceptToggle) {
+    const autoAcceptButtons = autoAcceptToggle.querySelectorAll("button");
+    const currentAutoAccept = detail.team.auto_accept_join_requests ? "1" : "0";
+    autoAcceptButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.auto === currentAutoAccept));
+    autoAcceptButtons.forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        try {
+          await apiPost("teams/set_auto_accept.php", { team_id: teamId, auto_accept: btn.dataset.auto === "1" });
+          showToast(t("saved"));
+          renderMain();
+        } catch (err) {
+          showToast(err.message || t("error_generic"));
+        }
+      });
+    });
+  }
 
   // --- join requests panel ---
   async function loadJoinRequests() {
