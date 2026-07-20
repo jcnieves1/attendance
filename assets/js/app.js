@@ -4,6 +4,7 @@ const APP = {
   user: null,
   teams: [],
   invitations: [],
+  notifications: [],
   currentTeamId: null,
   currentTeamDetail: null,
   currentTab: "week",
@@ -342,6 +343,8 @@ function wireStaticButtons() {
     await apiPost("auth/logout.php", {});
     APP.user = null;
     APP.teams = [];
+    APP.invitations = [];
+    APP.notifications = [];
     APP.currentTeamId = null;
     location.reload();
   });
@@ -538,18 +541,40 @@ function wireStaticButtons() {
       errorEl.textContent = err.message || t("error_generic");
     }
   });
+
+  // Remove a teammate (admin area) — destructive + irreversible, so this is
+  // gated behind its own confirm dialog rather than firing right away.
+  document.getElementById("cancel-remove-member-btn").addEventListener("click", () => {
+    pendingRemoveMember = null;
+    closeModal("modal-confirm-remove-member");
+  });
+  document.getElementById("confirm-remove-member-btn").addEventListener("click", async () => {
+    if (!pendingRemoveMember) return;
+    const { teamId, userId } = pendingRemoveMember;
+    pendingRemoveMember = null;
+    closeModal("modal-confirm-remove-member");
+    try {
+      await apiPost("teams/remove_member.php", { team_id: teamId, user_id: userId });
+      showToast(t("member_removed_toast"));
+      renderMain();
+    } catch (err) {
+      showToast(err.message || t("error_generic"));
+    }
+  });
 }
 
 /* -------------------------------- sidebar ---------------------------------- */
 
 async function loadSidebarData() {
   try {
-    const [teamsRes, invitesRes] = await Promise.all([
+    const [teamsRes, invitesRes, notifsRes] = await Promise.all([
       apiGet("teams/list.php"),
       apiGet("invitations/list_mine.php"),
+      apiGet("notifications/list.php"),
     ]);
     APP.teams = teamsRes.teams;
     APP.invitations = invitesRes.invitations;
+    APP.notifications = notifsRes.notifications;
     renderSidebar();
     renderInvitationsBadge();
 
@@ -591,7 +616,7 @@ function renderSidebar() {
 
 function renderInvitationsBadge() {
   const badge = document.getElementById("invitations-badge");
-  const count = APP.invitations.length;
+  const count = APP.invitations.length + APP.notifications.length;
   badge.textContent = count;
   badge.classList.toggle("hidden", count === 0);
 }
@@ -600,44 +625,105 @@ function renderInvitationsModal() {
   const list = document.getElementById("invitations-modal-list");
   if (!APP.invitations.length) {
     list.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t("no_pending_invitations")}</p>`;
+  } else {
+    list.innerHTML = "";
+    APP.invitations.forEach((inv) => {
+      const row = document.createElement("div");
+      row.className = "invite-list-item";
+      row.innerHTML = `
+        <div>
+          <div style="font-weight:600;">${escapeHtml(inv.team_name)}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${t("invited_by_label")} ${escapeHtml(inv.invited_by_name)} &middot; ${t("role_" + inv.role)}</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn small" data-action="accept" data-id="${inv.id}">${t("accept")}</button>
+          <button class="btn ghost small" data-action="decline" data-id="${inv.id}">${t("decline")}</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    list.querySelectorAll("button[data-action]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const invitationId = parseInt(btn.dataset.id, 10);
+        const action = btn.dataset.action;
+        try {
+          if (action === "accept") {
+            await apiPost("invitations/accept.php", { invitation_id: invitationId });
+            showToast(t("invite_accepted"));
+          } else {
+            await apiPost("invitations/decline.php", { invitation_id: invitationId });
+            showToast(t("invite_declined"));
+          }
+          await loadSidebarData();
+          renderInvitationsModal();
+        } catch (err) {
+          showToast(err.message || t("error_generic"));
+        }
+      });
+    });
+  }
+
+  renderNotificationsModalList();
+}
+
+/**
+ * Renders the informational 🔔 notifications (distinct from invitations,
+ * which have their own accept/decline flow above): a teammate being removed
+ * from a team, or someone waiting on a join-request decision. Both actions
+ * mark the notification read on the server before updating the local list.
+ */
+function renderNotificationsModalList() {
+  const box = document.getElementById("notifications-modal-list");
+  if (!APP.notifications.length) {
+    box.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t("no_notifications")}</p>`;
     return;
   }
-  list.innerHTML = "";
-  APP.invitations.forEach((inv) => {
-    const row = document.createElement("div");
-    row.className = "invite-list-item";
-    row.innerHTML = `
-      <div>
-        <div style="font-weight:600;">${escapeHtml(inv.team_name)}</div>
-        <div style="font-size:12px; color:var(--text-muted);">${t("invited_by_label")} ${escapeHtml(inv.invited_by_name)} &middot; ${t("role_" + inv.role)}</div>
-      </div>
-      <div style="display:flex; gap:6px;">
-        <button class="btn small" data-action="accept" data-id="${inv.id}">${t("accept")}</button>
-        <button class="btn ghost small" data-action="decline" data-id="${inv.id}">${t("decline")}</button>
+  box.innerHTML = APP.notifications.map((n) => {
+    const message = n.type === "join_request"
+      ? t("notif_join_request_message").replace("{name}", escapeHtml(n.actor_name || "")).replace("{team}", escapeHtml(n.team_name))
+      : t("notif_removed_message").replace("{team}", escapeHtml(n.team_name));
+    const actionLabel = n.type === "join_request" ? t("review_button") : t("acknowledge_button");
+    const actionAttr = n.type === "join_request" ? `data-action="review" data-team-id="${n.team_id || ""}"` : `data-action="acknowledge"`;
+    return `
+      <div class="invite-list-item">
+        <div>
+          <div>${message}</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn ${n.type === "join_request" ? "" : "ghost"} small" data-id="${n.id}" ${actionAttr}>${actionLabel}</button>
+        </div>
       </div>
     `;
-    list.appendChild(row);
-  });
+  }).join("");
 
-  list.querySelectorAll("button[data-action]").forEach((btn) => {
+  box.querySelectorAll("button[data-action]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const invitationId = parseInt(btn.dataset.id, 10);
+      const notificationId = parseInt(btn.dataset.id, 10);
       const action = btn.dataset.action;
       try {
-        if (action === "accept") {
-          await apiPost("invitations/accept.php", { invitation_id: invitationId });
-          showToast(t("invite_accepted"));
+        await apiPost("notifications/acknowledge.php", { notification_id: notificationId });
+        APP.notifications = APP.notifications.filter((n) => n.id !== notificationId);
+        renderInvitationsBadge();
+        if (action === "review" && btn.dataset.teamId) {
+          closeModal("modal-invitations");
+          await goToTeamAdminArea(parseInt(btn.dataset.teamId, 10));
         } else {
-          await apiPost("invitations/decline.php", { invitation_id: invitationId });
-          showToast(t("invite_declined"));
+          renderNotificationsModalList();
         }
-        await loadSidebarData();
-        renderInvitationsModal();
       } catch (err) {
         showToast(err.message || t("error_generic"));
       }
     });
   });
+}
+
+/** Jumps straight to a team's Admin area — used by the join-request notification's "Review" action. */
+async function goToTeamAdminArea(teamId) {
+  APP.currentTeamId = teamId;
+  APP.currentTab = "admin";
+  renderSidebar();
+  await renderMain();
 }
 
 async function selectTeam(teamId) {
@@ -1137,6 +1223,7 @@ function buildYearHeatmapCalendarsHtml(rows, year, trackWeekends) {
 let selectedInviteUser = null;
 let userSearchDebounce = null;
 let resetPasswordTarget = null;
+let pendingRemoveMember = null;
 
 async function renderAdminTab() {
   const container = document.getElementById("tab-content");
@@ -1635,7 +1722,7 @@ function renderMembersList(members, teamId, isOwner, isManager) {
       <button class="btn ghost small" data-action="${m.role === "admin" ? "make_employee" : "make_admin"}" data-user="${m.id}">
         ${m.role === "admin" ? t("make_employee") : t("make_admin")}
       </button>
-      <button class="btn danger small" data-action="remove" data-user="${m.id}">${t("remove_member")}</button>
+      <button class="btn danger small" data-action="remove" data-user="${m.id}" data-name="${escapeHtml(m.full_name)}">${t("remove_member")}</button>
     ` : "";
     // Any manager (owner or admin) can reset a teammate's password if they
     // get locked out — but never the owner's, and never their own (they'd
@@ -1672,12 +1759,17 @@ function renderMembersList(members, teamId, isOwner, isManager) {
         openModal("modal-reset-password");
         return;
       }
+      if (action === "remove") {
+        // Destructive + irreversible (it also wipes their attendance history
+        // for this team), so this always goes through a confirm dialog first
+        // instead of firing the API call right away.
+        pendingRemoveMember = { teamId, userId, name: btn.dataset.name };
+        document.getElementById("confirm-remove-member-name").textContent = btn.dataset.name;
+        openModal("modal-confirm-remove-member");
+        return;
+      }
       try {
-        if (action === "remove") {
-          await apiPost("teams/remove_member.php", { team_id: teamId, user_id: userId });
-        } else {
-          await apiPost("teams/set_role.php", { team_id: teamId, user_id: userId, role: action === "make_admin" ? "admin" : "employee" });
-        }
+        await apiPost("teams/set_role.php", { team_id: teamId, user_id: userId, role: action === "make_admin" ? "admin" : "employee" });
         renderMain();
       } catch (err) {
         showToast(err.message || t("error_generic"));

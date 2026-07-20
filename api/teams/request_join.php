@@ -15,7 +15,7 @@ if (!$teamId) {
 
 $pdo = db();
 
-$stmt = $pdo->prepare('SELECT id, join_policy FROM teams WHERE id = ?');
+$stmt = $pdo->prepare('SELECT id, name, join_policy FROM teams WHERE id = ?');
 $stmt->execute([$teamId]);
 $team = $stmt->fetch();
 if (!$team) {
@@ -39,5 +39,13 @@ if ($stmt->fetch()) {
 
 $pdo->prepare('INSERT INTO join_requests (team_id, user_id, status) VALUES (?, ?, "pending")')
     ->execute([$teamId, $userId]);
+
+// Let every owner/admin of the team know someone's waiting on their decision.
+$stmt = $pdo->prepare('SELECT full_name FROM users WHERE id = ?');
+$stmt->execute([$userId]);
+$requesterName = (string) $stmt->fetchColumn();
+foreach (manager_user_ids_for_team($teamId) as $managerId) {
+    create_notification($managerId, 'join_request', $teamId, $team['name'], $requesterName);
+}
 
 json_response(['ok' => true]);

@@ -102,6 +102,15 @@ index on `teams.name` (skipped automatically if you already have duplicate
 team names — rename the clashing teams and re-run the migration to add it),
 and the new `join_requests` table.
 
+If you're upgrading further to add the 🔔 notification bell for member
+removal and join requests, also run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v5_notifications.sql
+```
+
+It adds the new `notifications` table.
+
 ## 2. Configure the app
 
 Edit `api/config.php` (or set the equivalent environment variables — handy if
@@ -162,7 +171,14 @@ your machine's local IP, to try the mobile layout).
     that team, and click **Request to join** — it won't add you right away.
 15. Back in the first account's **Admin area** → **Join requests**, click
     **Accept** — the requester is added as an **employee** (never as admin),
-    or **Reject** to turn them down.
+    or **Reject** to turn them down. As soon as the request is sent, every
+    owner/admin of that team sees a 🔔 notification with a **Review** button
+    that jumps straight to this panel.
+16. From the **Members** list, click **Remove** on someone — a confirm
+    dialog warns that this permanently deletes their attendance history for
+    that team and can't be undone. Once confirmed, they'll see a 🔔
+    notification the next time they open the app, with an **Acknowledge**
+    button to dismiss it.
 
 ## Project structure
 
@@ -181,6 +197,7 @@ OfficePal/
     migrate_v2_inapp_invites.sql       Upgrade path: email invites -> in-app
     migrate_v3_password_reset.sql     Upgrade path: adds security question
     migrate_v4_join_requests.sql      Upgrade path: team rename/join requests
+    migrate_v5_notifications.sql      Upgrade path: adds notifications table
 ```
 
 ## Notes on the design

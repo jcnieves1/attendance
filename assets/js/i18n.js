@@ -177,6 +177,17 @@ const DICT = {
     already_requested_label: "Requested",
     join_request_sent_toast: "Your request to join has been sent.",
 
+    // Notifications (🔔 bell) + remove-member confirm dialog
+    notifications_title: "Notifications",
+    no_notifications: "No notifications right now.",
+    notif_removed_message: "You were removed from the team \"{team}\".",
+    notif_join_request_message: "{name} wants to join the team \"{team}\".",
+    acknowledge_button: "Acknowledge",
+    review_button: "Review",
+    confirm_remove_member_title: "Remove team member?",
+    confirm_remove_member_message: "This will permanently delete their attendance history for this team. This action cannot be undone.",
+    member_removed_toast: "Teammate removed.",
+
     // Misc / errors
     loading: "Loading...",
     save: "Save",
@@ -366,6 +377,17 @@ const DICT = {
     request_to_join_button: "Solicitar unirme",
     already_requested_label: "Solicitado",
     join_request_sent_toast: "Tu solicitud para unirte ha sido enviada.",
+
+    // Notificaciones (campana 🔔) + confirmación para quitar un miembro
+    notifications_title: "Notificaciones",
+    no_notifications: "No hay notificaciones por ahora.",
+    notif_removed_message: "Fuiste eliminado del equipo \"{team}\".",
+    notif_join_request_message: "{name} quiere unirse al equipo \"{team}\".",
+    acknowledge_button: "Entendido",
+    review_button: "Revisar",
+    confirm_remove_member_title: "¿Quitar a este miembro del equipo?",
+    confirm_remove_member_message: "Esto eliminará permanentemente su historial de asistencia para este equipo. Esta acción no se puede deshacer.",
+    member_removed_toast: "Miembro eliminado.",
 
     loading: "Cargando...",
     save: "Guardar",

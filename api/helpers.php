@@ -157,3 +157,25 @@ function week_start(?string $ymd = null): string
     $date->modify('-' . ($dow - 1) . ' days');
     return $date->format('Y-m-d');
 }
+
+/**
+ * Queues a 🔔-bell notification for a user. team_name/actor_name are stored
+ * as plain-text snapshots (not live joins) so the notification still reads
+ * sensibly even if the team or the other person's account changes later.
+ */
+function create_notification(int $userId, string $type, ?int $teamId, string $teamName, ?string $actorName = null): void
+{
+    db()->prepare(
+        'INSERT INTO notifications (user_id, type, team_id, team_name, actor_name) VALUES (?, ?, ?, ?, ?)'
+    )->execute([$userId, $type, $teamId, $teamName, $actorName]);
+}
+
+/** Active owner/admin user IDs for a team — the people who manage it. */
+function manager_user_ids_for_team(int $teamId): array
+{
+    $stmt = db()->prepare(
+        "SELECT user_id FROM team_members WHERE team_id = ? AND status = 'active' AND role IN ('owner', 'admin')"
+    );
+    $stmt->execute([$teamId]);
+    return array_map('intval', array_column($stmt->fetchAll(), 'user_id'));
+}

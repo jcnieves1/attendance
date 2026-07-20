@@ -154,4 +154,26 @@ CREATE TABLE IF NOT EXISTS join_requests (
     KEY idx_join_requests_user_status (user_id, status)
 ) ENGINE=InnoDB;
 
+-- ---------------------------------------------------------------------------
+-- Notifications: shown in the 🔔 bell. Currently two kinds — a user is told
+-- when a manager/admin removes them from a team, and every owner/admin of a
+-- team is told when someone requests to join it via "Find a team".
+-- team_name / actor_name are denormalized snapshots so the notification still
+-- reads sensibly even after the team or the other person's account changes.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS notifications (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT UNSIGNED NOT NULL COMMENT 'recipient',
+    type            ENUM('removed_from_team','join_request') NOT NULL,
+    team_id         INT UNSIGNED NULL,
+    team_name       VARCHAR(150) NOT NULL,
+    actor_name      VARCHAR(150) NULL COMMENT 'e.g. the person requesting to join, for join_request notifications',
+    status          ENUM('unread','read') NOT NULL DEFAULT 'unread',
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_at         DATETIME NULL,
+    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL,
+    KEY idx_notifications_user_status (user_id, status)
+) ENGINE=InnoDB;
+
 SET FOREIGN_KEY_CHECKS = 1;
