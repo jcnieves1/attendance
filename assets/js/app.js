@@ -1139,6 +1139,25 @@ async function renderAdminTab() {
           <a id="export-excel-btn" class="btn small secondary" data-t="export_excel_button" href="#" target="_blank" rel="noopener"></a>
         </div>
       </div>
+      <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+        <span style="color:var(--text-muted); font-size:13px;">${t("filter_by_teammate_label")}</span>
+        <div class="member-filter" id="admin-member-filter">
+          <button type="button" class="member-filter-toggle" id="member-filter-toggle">
+            <span id="member-filter-label">${t("all_team")}</span><span class="member-filter-caret">▾</span>
+          </button>
+          <div class="member-filter-panel hidden" id="member-filter-panel">
+            <label class="member-filter-option">
+              <input type="checkbox" id="member-filter-all" checked /> <strong>${t("all_team")}</strong>
+            </label>
+            <div class="member-filter-divider"></div>
+            ${detail.members.map((m) => `
+              <label class="member-filter-option">
+                <input type="checkbox" class="member-filter-member" value="${m.id}" checked /> ${escapeHtml(m.full_name)}
+              </label>
+            `).join("")}
+          </div>
+        </div>
+      </div>
       <div id="admin-dash-body"></div>
     </div>
   `;
@@ -1295,6 +1314,73 @@ async function renderAdminTab() {
 
   renderMembersList(detail.members, teamId, isOwner, isManager);
 
+  // --- attendance dashboard: filter by teammate (multi-select checkbox dropdown) ---
+  // Defaults to "All team" with every member checked, per the requested behavior.
+  let selectedMemberIds = new Set(detail.members.map((m) => m.id));
+  let lastAdminDashboardData = null;
+  const memberNameById = {};
+  detail.members.forEach((m) => { memberNameById[m.id] = m.full_name; });
+
+  const memberFilterEl = document.getElementById("admin-member-filter");
+  const memberFilterToggle = document.getElementById("member-filter-toggle");
+  const memberFilterPanel = document.getElementById("member-filter-panel");
+  const memberFilterLabel = document.getElementById("member-filter-label");
+  const memberFilterAllCheckbox = document.getElementById("member-filter-all");
+  const memberCheckboxes = Array.from(document.querySelectorAll(".member-filter-member"));
+
+  memberFilterToggle.addEventListener("click", () => {
+    memberFilterPanel.classList.toggle("hidden");
+  });
+  // Scoped to the tab container (not document) so this listener is thrown
+  // away along with the rest of the admin tab's old DOM on every re-render,
+  // instead of quietly stacking up a new document-level listener each time.
+  container.addEventListener("click", (e) => {
+    if (!memberFilterEl.contains(e.target)) memberFilterPanel.classList.add("hidden");
+  });
+
+  function updateMemberFilterLabel() {
+    const total = memberCheckboxes.length;
+    const selected = selectedMemberIds.size;
+    if (selected === total) {
+      memberFilterLabel.textContent = t("all_team");
+    } else if (selected === 0) {
+      memberFilterLabel.textContent = t("no_members_selected");
+    } else if (selected === 1) {
+      const onlyId = Array.from(selectedMemberIds)[0];
+      memberFilterLabel.textContent = memberNameById[onlyId] || `${selected} ${t("teammates_selected_label")}`;
+    } else {
+      memberFilterLabel.textContent = `${selected} ${t("teammates_selected_label")}`;
+    }
+  }
+
+  function refreshAdminDashboardFiltered() {
+    if (lastAdminDashboardData) {
+      renderAdminDashboard(lastAdminDashboardData, APP.adminDashboardYear, APP.adminDashboardMonth, selectedMemberIds);
+    }
+  }
+
+  memberFilterAllCheckbox.addEventListener("change", () => {
+    const checked = memberFilterAllCheckbox.checked;
+    memberFilterAllCheckbox.indeterminate = false;
+    memberCheckboxes.forEach((cb) => { cb.checked = checked; });
+    selectedMemberIds = checked ? new Set(detail.members.map((m) => m.id)) : new Set();
+    updateMemberFilterLabel();
+    refreshAdminDashboardFiltered();
+  });
+
+  memberCheckboxes.forEach((cb) => {
+    cb.addEventListener("change", () => {
+      const id = parseInt(cb.value, 10);
+      if (cb.checked) selectedMemberIds.add(id); else selectedMemberIds.delete(id);
+      const allChecked = memberCheckboxes.every((c) => c.checked);
+      const noneChecked = memberCheckboxes.every((c) => !c.checked);
+      memberFilterAllCheckbox.checked = allChecked;
+      memberFilterAllCheckbox.indeterminate = !allChecked && !noneChecked;
+      updateMemberFilterLabel();
+      refreshAdminDashboardFiltered();
+    });
+  });
+
   function updateExportLink(year, month) {
     const params = new URLSearchParams({ team_id: teamId, year });
     if (month) params.set("month", month);
@@ -1303,7 +1389,8 @@ async function renderAdminTab() {
 
   async function loadAdminDashboard(year, month) {
     const res = await apiGet("dashboard/manager.php", { team_id: teamId, year, month: month || "" });
-    renderAdminDashboard(res, year, month);
+    lastAdminDashboardData = res;
+    renderAdminDashboard(res, year, month, selectedMemberIds);
     updateExportLink(year, month);
   }
 
@@ -1383,19 +1470,26 @@ function renderMembersList(members, teamId, isOwner, isManager) {
   });
 }
 
-function renderAdminDashboard(data, year, month) {
+function renderAdminDashboard(data, year, month, selectedMemberIds) {
   const body = document.getElementById("admin-dash-body");
   const { from, to } = dashboardDateRange(year, month);
+
+  // selectedMemberIds narrows both the calendar heatmap and the per-person
+  // breakdown down to only the teammates checked in the filter dropdown —
+  // "possible days" is left alone since that's about the team's tracked
+  // schedule, not about who's currently selected.
+  const members = selectedMemberIds ? data.members.filter((m) => selectedMemberIds.has(m.id)) : data.members;
+  const attendance = selectedMemberIds ? data.attendance.filter((a) => selectedMemberIds.has(a.user_id)) : data.attendance;
 
   const trackWeekends = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.track_weekends);
   const possibleDays = countApplicableDays(from, to, trackWeekends);
   const heatmapHtml = month
-    ? `<div class="heatcal-wrap">${buildHeatmapCalendarHtml(data.attendance, year, month, trackWeekends)}</div>`
-    : buildYearHeatmapCalendarsHtml(data.attendance, year, trackWeekends);
+    ? `<div class="heatcal-wrap">${buildHeatmapCalendarHtml(attendance, year, month, trackWeekends)}</div>`
+    : buildYearHeatmapCalendarsHtml(attendance, year, trackWeekends);
 
   const byMember = {};
-  data.members.forEach((m) => { byMember[m.id] = { id: m.id, name: m.full_name, count: 0 }; });
-  data.attendance.forEach((a) => {
+  members.forEach((m) => { byMember[m.id] = { id: m.id, name: m.full_name, count: 0 }; });
+  attendance.forEach((a) => {
     if (byMember[a.user_id]) byMember[a.user_id].count++;
   });
   const rows = Object.values(byMember)

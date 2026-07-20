@@ -464,6 +464,27 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
   font-size: 12px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0;
 }
 
+/* ---------------- Member filter (checkbox multi-select dropdown) ---------------- */
+.member-filter { position: relative; }
+.member-filter-toggle {
+  display: flex; align-items: center; gap: 6px; background: var(--surface-alt); border: 1px solid var(--border);
+  color: var(--text); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; max-width: 220px;
+}
+.member-filter-toggle span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.member-filter-caret { font-size: 10px; color: var(--text-muted); }
+.member-filter-panel {
+  position: absolute; top: 100%; right: 0; margin-top: 6px; z-index: 15;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); padding: 8px; min-width: 220px; max-height: 260px; overflow-y: auto;
+}
+.member-filter-option {
+  display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px;
+  font-size: 13px; color: var(--text); cursor: pointer; white-space: nowrap;
+}
+.member-filter-option:hover { background: var(--surface-alt); }
+.member-filter-option input { margin: 0; width: auto; flex-shrink: 0; }
+.member-filter-divider { height: 1px; background: var(--border); margin: 4px 2px; }
+
 /* ---------------- Weekday / calendar tracking-mode toggle ---------------- */
 .mode-toggle { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .mode-toggle button {

@@ -137,6 +137,10 @@ const DICT = {
     month_may: "May", month_jun: "Jun", month_jul: "Jul", month_aug: "Aug",
     month_sep: "Sep", month_oct: "Oct", month_nov: "Nov", month_dec: "Dec",
     export_excel_button: "Download Excel",
+    filter_by_teammate_label: "Filter by teammate:",
+    all_team: "All team",
+    no_members_selected: "No teammates selected",
+    teammates_selected_label: "teammates selected",
 
     // Misc / errors
     loading: "Loading...",
@@ -288,6 +292,10 @@ const DICT = {
     month_may: "May", month_jun: "Jun", month_jul: "Jul", month_aug: "Ago",
     month_sep: "Sep", month_oct: "Oct", month_nov: "Nov", month_dec: "Dic",
     export_excel_button: "Descargar Excel",
+    filter_by_teammate_label: "Filtrar por compañero:",
+    all_team: "Todo el equipo",
+    no_members_selected: "Ningún compañero seleccionado",
+    teammates_selected_label: "compañeros seleccionados",
 
     loading: "Cargando...",
     save: "Guardar",
