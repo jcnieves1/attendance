@@ -855,11 +855,13 @@ function renderTeamDashboard(rows, year, month) {
   });
   const members = Object.values(byMember).sort((a, b) => b.count - a.count);
 
-  const { from, to } = dashboardDateRange(year, month);
-  const heatmap = buildHeatmapRange(rows, from, to);
+  const trackWeekends = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.track_weekends);
+  const heatmapHtml = month
+    ? `<div class="heatcal-wrap">${buildHeatmapCalendarHtml(rows, year, month, trackWeekends)}</div>`
+    : buildYearHeatmapCalendarsHtml(rows, year, trackWeekends);
 
   body.innerHTML = `
-    <div class="heatmap">${heatmap}</div>
+    ${heatmapHtml}
     <div class="heatmap-legend">
       <span>${t("days_attended")}:</span>
       <span class="heat-cell" data-level="0"></span>
@@ -886,29 +888,70 @@ function renderTeamDashboard(rows, year, month) {
 }
 
 /**
- * Builds heatmap cell HTML for every day between fromStr and toStr
- * (inclusive). Each cell's tooltip shows the date plus who actually checked
- * in that day, so hovering tells you both at a glance instead of just a
- * bare count.
+ * Builds one month as a calendar grid where each day cell is colored by
+ * attendance heat level (same 0-4 scale the old linear heatmap used), and
+ * carries a tooltip with the date plus who actually checked in that day.
+ * Used both for a single selected month and, one-per-month, for a whole
+ * year's worth of mini calendars.
  */
-function buildHeatmapRange(rows, fromStr, toStr) {
+function buildHeatmapCalendarHtml(rows, year, month, trackWeekends) {
   const namesByDate = {};
   rows.forEach((r) => {
     if (!namesByDate[r.attendance_date]) namesByDate[r.attendance_date] = [];
     namesByDate[r.attendance_date].push(r.full_name);
   });
 
-  const start = new Date(`${fromStr}T00:00:00`);
-  const end = new Date(`${toStr}T00:00:00`);
-  let html = "";
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const dstr = ymd(d);
-    const names = namesByDate[dstr] || [];
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstDow = (new Date(year, month - 1, 1).getDay() + 6) % 7; // 0=Mon..6=Sun
+  const todayStr = ymd(new Date());
+
+  let cellsHtml = "";
+  for (let i = 0; i < firstDow; i++) {
+    cellsHtml += `<div class="cal-day-cell empty"></div>`;
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const mm = String(month).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    const dateStr = `${year}-${mm}-${dd}`;
+    const dow = (firstDow + day - 1) % 7;
+    const isWeekend = dow >= 5;
+    const isToday = dateStr === todayStr;
+    const names = namesByDate[dateStr] || [];
     const c = names.length;
     const level = c === 0 ? 0 : c === 1 ? 1 : c === 2 ? 2 : c <= 4 ? 3 : 4;
-    const tooltip = c ? `${dstr} — ${names.join(", ")}` : dstr;
-    html += `<div class="heat-cell" data-level="${level}" title="${escapeHtml(tooltip)}"></div>`;
+    const tooltip = c ? `${dateStr} — ${names.join(", ")}` : dateStr;
+
+    const classes = ["cal-day-cell", "heatcal-cell"];
+    if (isToday) classes.push("today");
+    if (isWeekend && !trackWeekends) classes.push("weekend-muted");
+
+    cellsHtml += `
+      <div class="${classes.join(" ")}" data-level="${level}" title="${escapeHtml(tooltip)}">
+        <div class="cal-day-num">${day}</div>
+      </div>
+    `;
   }
+
+  const headerHtml = DAY_KEYS.map((key) => `<div class="cal-header-cell">${t(key)}</div>`).join("");
+
+  return `
+    <div class="cal-header-row">${headerHtml}</div>
+    <div class="cal-grid">${cellsHtml}</div>
+  `;
+}
+
+/** All 12 months of a year, each rendered as its own small heat-colored calendar. */
+function buildYearHeatmapCalendarsHtml(rows, year, trackWeekends) {
+  let html = `<div class="heatcal-year-grid">`;
+  for (let m = 1; m <= 12; m++) {
+    html += `
+      <div class="heatcal-month-card">
+        <div class="heatcal-month-label">${t(MONTH_KEYS[m - 1])}</div>
+        ${buildHeatmapCalendarHtml(rows, year, m, trackWeekends)}
+      </div>
+    `;
+  }
+  html += `</div>`;
   return html;
 }
 
@@ -1226,10 +1269,12 @@ function renderMembersList(members, teamId, isOwner, isManager) {
 function renderAdminDashboard(data, year, month) {
   const body = document.getElementById("admin-dash-body");
   const { from, to } = dashboardDateRange(year, month);
-  const heatmap = buildHeatmapRange(data.attendance, from, to);
 
   const trackWeekends = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.track_weekends);
   const possibleDays = countApplicableDays(from, to, trackWeekends);
+  const heatmapHtml = month
+    ? `<div class="heatcal-wrap">${buildHeatmapCalendarHtml(data.attendance, year, month, trackWeekends)}</div>`
+    : buildYearHeatmapCalendarsHtml(data.attendance, year, trackWeekends);
 
   const byMember = {};
   data.members.forEach((m) => { byMember[m.id] = { id: m.id, name: m.full_name, count: 0 }; });
@@ -1245,7 +1290,7 @@ function renderAdminDashboard(data, year, month) {
   const teamAvgPercent = rows.length && possibleDays ? Math.round((teamTotal / (rows.length * possibleDays)) * 100) : 0;
 
   body.innerHTML = `
-    <div class="heatmap">${heatmap}</div>
+    ${heatmapHtml}
     <div class="heatmap-legend">
       <span>${t("days_attended")}:</span>
       <span class="heat-cell" data-level="0"></span>
