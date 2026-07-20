@@ -452,6 +452,29 @@ function wireStaticButtons() {
   });
   document.getElementById("close-invitations-modal").addEventListener("click", () => closeModal("modal-invitations"));
 
+  // Acknowledge all notifications at once — destructive + irreversible, so
+  // it's gated behind its own confirm dialog, same pattern as removing a
+  // teammate.
+  document.getElementById("acknowledge-all-notifications-btn").addEventListener("click", () => {
+    if (!APP.notifications.length) return;
+    openModal("modal-confirm-clear-notifications");
+  });
+  document.getElementById("cancel-clear-notifications-btn").addEventListener("click", () => {
+    closeModal("modal-confirm-clear-notifications");
+  });
+  document.getElementById("confirm-clear-notifications-btn").addEventListener("click", async () => {
+    closeModal("modal-confirm-clear-notifications");
+    try {
+      await apiPost("notifications/acknowledge_all.php", {});
+      APP.notifications = [];
+      renderInvitationsBadge();
+      renderNotificationsModalList();
+      showToast(t("notifications_cleared_toast"));
+    } catch (err) {
+      showToast(err.message || t("error_generic"));
+    }
+  });
+
   // My account (change password + security question).
   document.getElementById("account-btn").addEventListener("click", () => {
     document.getElementById("account-current-password").value = "";
@@ -717,6 +740,8 @@ function buildNotificationMessage(n) {
  */
 function renderNotificationsModalList() {
   const box = document.getElementById("notifications-modal-list");
+  // "Acknowledge all" only makes sense once there's something to acknowledge.
+  document.getElementById("acknowledge-all-notifications-btn").disabled = !APP.notifications.length;
   if (!APP.notifications.length) {
     box.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">${t("no_notifications")}</p>`;
     return;
