@@ -5,66 +5,214 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>OfficePal — office attendance, made friendly</title>
 <link rel="icon" href="assets/img/mascot-wave.svg" />
-<link rel="stylesheet" href="assets/css/styles.css?v=19" />
+<link rel="stylesheet" href="assets/css/styles.css?v=20" />
 </head>
 <body>
 
-<!-- ======================= AUTH SCREEN ======================= -->
+<!-- ======================= AUTH SCREEN / LANDING PAGE ======================= -->
 <div id="auth-screen" class="auth-screen">
-  <div class="auth-card">
-    <img class="mascot" src="assets/img/mascot-wave.svg" alt="Pal the OfficePal mascot waving" />
-    <h1 style="margin:6px 0 2px;">OfficePal</h1>
-    <p style="color:var(--text-muted); margin-top:0;" data-t="tagline">Your friendly office attendance buddy</p>
+  <div class="landing-page">
 
-    <div class="auth-tabs">
-      <button id="tab-login" class="active" data-t="login_tab">Log in</button>
-      <button id="tab-register" data-t="register_tab">Create account</button>
-    </div>
-
-    <form id="login-form" class="auth-form">
-      <label data-t="email_label">Email</label>
-      <input type="email" id="login-email" required autocomplete="email" />
-      <label data-t="password_label">Password</label>
-      <input type="password" id="login-password" required autocomplete="current-password" />
-      <label id="login-captcha-question" for="login-captcha-answer" style="margin-top:10px;"></label>
-      <input type="text" id="login-captcha-answer" inputmode="numeric" autocomplete="off" required />
-      <div style="text-align:right; margin-top:8px;">
-        <a href="#" id="forgot-password-link" style="font-size:13px;" data-t="forgot_password_link">Forgot your password?</a>
+    <!-- ---- nav ---- -->
+    <header class="landing-nav">
+      <div class="brand">
+        <img src="assets/img/mascot-wave.svg" alt="OfficePal" />
+        <span data-t="app_name">OfficePal</span>
       </div>
-      <button type="submit" class="btn" style="width:100%; margin-top:14px;" data-t="login_button">Log in</button>
-      <div class="error-msg" id="login-error"></div>
-    </form>
-
-    <form id="register-form" class="auth-form hidden">
-      <label data-t="full_name_label">Your real name</label>
-      <input type="text" id="register-name" required autocomplete="name" />
-      <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-t="full_name_hint"></div>
-      <label data-t="email_label">Email</label>
-      <input type="email" id="register-email" required autocomplete="email" />
-      <label data-t="password_label">Password</label>
-      <input type="password" id="register-password" required minlength="8" autocomplete="new-password" />
-      <label id="register-captcha-question" for="register-captcha-answer" style="margin-top:10px;"></label>
-      <input type="text" id="register-captcha-answer" inputmode="numeric" autocomplete="off" required />
-      <label data-t="security_question_label">Security question (optional)</label>
-      <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-t="security_question_hint"></div>
-      <input type="text" id="register-security-question" data-t-placeholder="security_question_placeholder" autocomplete="off" />
-      <label data-t="security_answer_label">Your answer</label>
-      <input type="text" id="register-security-answer" autocomplete="off" />
-      <button type="submit" class="btn" style="width:100%; margin-top:18px;" data-t="register_button">Create my account</button>
-      <div class="error-msg" id="register-error"></div>
-    </form>
-
-    <div style="margin-top:18px; display:flex; justify-content:center; flex-wrap:wrap; gap:14px;">
-      <select id="auth-lang" class="icon-select">
-        <option value="en">EN — English</option>
-        <option value="es">ES — Español</option>
-      </select>
-      <div class="theme-dot-group">
-        <span class="theme-dot sunrise" data-theme="sunrise" title="Sunrise"></span>
-        <span class="theme-dot forest" data-theme="forest" title="Forest"></span>
-        <span class="theme-dot midnight" data-theme="midnight" title="Midnight"></span>
+      <div class="landing-nav-actions">
+        <select id="auth-lang" class="icon-select">
+          <option value="en">EN — English</option>
+          <option value="es">ES — Español</option>
+        </select>
+        <div class="theme-dot-group">
+          <span class="theme-dot sunrise" data-theme="sunrise" title="Sunrise"></span>
+          <span class="theme-dot forest" data-theme="forest" title="Forest"></span>
+          <span class="theme-dot midnight" data-theme="midnight" title="Midnight"></span>
+        </div>
+        <button class="btn ghost small landing-cta" data-cta="login" data-t="landing_cta_login">Log in</button>
+        <button class="btn small landing-cta" data-cta="register" data-t="landing_nav_signup">Create free account</button>
       </div>
-    </div>
+    </header>
+
+    <!-- ---- hero (marketing copy + the existing login/register card) ---- -->
+    <section class="landing-hero">
+      <div class="landing-hero-copy">
+        <h1 data-t="landing_hero_title">Office attendance tracking that people actually enjoy using</h1>
+        <p class="landing-hero-subtitle" data-t="landing_hero_subtitle">OfficePal helps hybrid teams plan office days together, see who's in on any given day, and keep managers in the loop.</p>
+        <div class="landing-hero-ctas">
+          <button class="btn landing-cta" data-cta="register" data-t="landing_cta_get_started">Get started free</button>
+          <button class="btn secondary landing-cta" data-cta="login" data-t="landing_cta_login">Log in</button>
+        </div>
+        <p style="font-size:13px; color:var(--text-muted);" data-t="landing_hero_trust_line">Trusted by 640+ teams and over 18,500 teammates around the world.</p>
+      </div>
+
+      <div class="landing-hero-auth" id="auth-card-anchor">
+        <div class="auth-card">
+          <img class="mascot" src="assets/img/mascot-wave.svg" alt="Pal the OfficePal mascot waving" />
+          <h1 style="margin:6px 0 2px;">OfficePal</h1>
+          <p style="color:var(--text-muted); margin-top:0;" data-t="tagline">Your friendly office attendance buddy</p>
+
+          <div class="auth-tabs">
+            <button id="tab-login" class="active" data-t="login_tab">Log in</button>
+            <button id="tab-register" data-t="register_tab">Create account</button>
+          </div>
+
+          <form id="login-form" class="auth-form">
+            <label data-t="email_label">Email</label>
+            <input type="email" id="login-email" required autocomplete="email" />
+            <label data-t="password_label">Password</label>
+            <input type="password" id="login-password" required autocomplete="current-password" />
+            <label id="login-captcha-question" for="login-captcha-answer" style="margin-top:10px;"></label>
+            <input type="text" id="login-captcha-answer" inputmode="numeric" autocomplete="off" required />
+            <div style="text-align:right; margin-top:8px;">
+              <a href="#" id="forgot-password-link" style="font-size:13px;" data-t="forgot_password_link">Forgot your password?</a>
+            </div>
+            <button type="submit" class="btn" style="width:100%; margin-top:14px;" data-t="login_button">Log in</button>
+            <div class="error-msg" id="login-error"></div>
+          </form>
+
+          <form id="register-form" class="auth-form hidden">
+            <label data-t="full_name_label">Your real name</label>
+            <input type="text" id="register-name" required autocomplete="name" />
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-t="full_name_hint"></div>
+            <label data-t="email_label">Email</label>
+            <input type="email" id="register-email" required autocomplete="email" />
+            <label data-t="password_label">Password</label>
+            <input type="password" id="register-password" required minlength="8" autocomplete="new-password" />
+            <label id="register-captcha-question" for="register-captcha-answer" style="margin-top:10px;"></label>
+            <input type="text" id="register-captcha-answer" inputmode="numeric" autocomplete="off" required />
+            <label data-t="security_question_label">Security question (optional)</label>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-t="security_question_hint"></div>
+            <input type="text" id="register-security-question" data-t-placeholder="security_question_placeholder" autocomplete="off" />
+            <label data-t="security_answer_label">Your answer</label>
+            <input type="text" id="register-security-answer" autocomplete="off" />
+            <button type="submit" class="btn" style="width:100%; margin-top:18px;" data-t="register_button">Create my account</button>
+            <div class="error-msg" id="register-error"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- features ---- -->
+    <section class="landing-section">
+      <h2 data-t="landing_features_title">Everything your team needs to plan office days</h2>
+      <p class="landing-section-subtitle" data-t="landing_features_subtitle">One friendly dashboard for check-ins, calendars, teams, and updates.</p>
+      <div class="landing-feature-grid">
+        <div class="landing-feature-card">
+          <img src="assets/img/mascot-wave.svg" alt="" />
+          <h3 data-t="landing_feature_checkin_title">One-tap weekly check-in</h3>
+          <p data-t="landing_feature_checkin_text">Mark your office days for the week with a single tap.</p>
+        </div>
+        <div class="landing-feature-card">
+          <img src="assets/img/mascot-celebrate.svg" alt="" />
+          <h3 data-t="landing_feature_calendar_title">Calendars & heatmaps</h3>
+          <p data-t="landing_feature_calendar_text">See your own attendance history as a friendly month-by-month calendar.</p>
+        </div>
+        <div class="landing-feature-card">
+          <img src="assets/img/mascot-wave.svg" alt="" />
+          <h3 data-t="landing_feature_teams_title">Teams, roles & join requests</h3>
+          <p data-t="landing_feature_teams_text">Create or join a team in seconds, with roles and open or invite-only access.</p>
+        </div>
+        <div class="landing-feature-card">
+          <img src="assets/img/mascot-empty.svg" alt="" />
+          <h3 data-t="landing_feature_notifications_title">Smart notifications</h3>
+          <p data-t="landing_feature_notifications_text">A 🔔 bell keeps everyone posted — nothing gets missed.</p>
+        </div>
+        <div class="landing-feature-card">
+          <img src="assets/img/mascot-wave.svg" alt="" />
+          <h3 data-t="landing_feature_messages_title">Team messages board</h3>
+          <p data-t="landing_feature_messages_text">Admins can pin rich-text announcements for the whole team.</p>
+        </div>
+        <div class="landing-feature-card">
+          <img src="assets/img/mascot-celebrate.svg" alt="" />
+          <h3 data-t="landing_feature_reports_title">Dashboards & Excel export</h3>
+          <p data-t="landing_feature_reports_text">Managers get attendance summaries, exportable to Excel in one click.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- how it works ---- -->
+    <section class="landing-section landing-section-alt">
+      <h2 data-t="landing_workflow_title">How OfficePal works</h2>
+      <p class="landing-section-subtitle" data-t="landing_workflow_subtitle">Four simple steps and you're set for the week.</p>
+      <div class="landing-steps">
+        <div class="landing-step">
+          <span class="landing-step-num">1</span>
+          <img src="assets/img/mascot-wave.svg" alt="" />
+          <h3 data-t="landing_step1_title">Create your free account</h3>
+          <p data-t="landing_step1_text">Sign up in under a minute — just your name, email, and a password.</p>
+        </div>
+        <div class="landing-step">
+          <span class="landing-step-num">2</span>
+          <img src="assets/img/mascot-wave.svg" alt="" />
+          <h3 data-t="landing_step2_title">Join or create a team</h3>
+          <p data-t="landing_step2_text">Search for your team and request to join, or start a new one for your group.</p>
+        </div>
+        <div class="landing-step">
+          <span class="landing-step-num">3</span>
+          <img src="assets/img/mascot-celebrate.svg" alt="" />
+          <h3 data-t="landing_step3_title">Tap your office days</h3>
+          <p data-t="landing_step3_text">On "This week", tap the days you'll be in — OfficePal remembers your favorites too.</p>
+        </div>
+        <div class="landing-step">
+          <span class="landing-step-num">4</span>
+          <img src="assets/img/mascot-celebrate.svg" alt="" />
+          <h3 data-t="landing_step4_title">Track your streak</h3>
+          <p data-t="landing_step4_text">Watch your calendar fill in and see how your team's week is shaping up.</p>
+        </div>
+      </div>
+      <div class="landing-section-cta">
+        <button class="btn landing-cta" data-cta="register" data-t="landing_cta_get_started">Get started free</button>
+      </div>
+    </section>
+
+    <!-- ---- stats ---- -->
+    <section class="landing-stats-band">
+      <div class="landing-stat"><strong data-t="landing_stat_1_value">18,500+</strong><span data-t="landing_stat_1_label">teammates checking in</span></div>
+      <div class="landing-stat"><strong data-t="landing_stat_2_value">640+</strong><span data-t="landing_stat_2_label">teams using OfficePal</span></div>
+      <div class="landing-stat"><strong data-t="landing_stat_3_value">2.3M+</strong><span data-t="landing_stat_3_label">office days logged</span></div>
+      <div class="landing-stat"><strong data-t="landing_stat_4_value">4.8 / 5</strong><span data-t="landing_stat_4_label">average team rating</span></div>
+    </section>
+
+    <!-- ---- reviews ---- -->
+    <section class="landing-section">
+      <h2 data-t="landing_reviews_title">Loved by hybrid teams everywhere</h2>
+      <div class="landing-reviews-grid">
+        <div class="landing-review-card">
+          <img class="landing-review-mascot" src="assets/img/mascot-celebrate.svg" alt="" />
+          <div class="landing-review-stars">★★★★★</div>
+          <p class="landing-review-quote" data-t="landing_review_1_quote">"OfficePal turned our messy Slack thread into an actual system."</p>
+          <div class="landing-review-author" data-t="landing_review_1_author">Maria G. — Team Lead</div>
+        </div>
+        <div class="landing-review-card">
+          <img class="landing-review-mascot" src="assets/img/mascot-wave.svg" alt="" />
+          <div class="landing-review-stars">★★★★★</div>
+          <p class="landing-review-quote" data-t="landing_review_2_quote">"The calendar view is so satisfying to fill in."</p>
+          <div class="landing-review-author" data-t="landing_review_2_author">Devon R. — Software Engineer</div>
+        </div>
+        <div class="landing-review-card">
+          <img class="landing-review-mascot" src="assets/img/mascot-celebrate.svg" alt="" />
+          <div class="landing-review-stars">★★★★★</div>
+          <p class="landing-review-quote" data-t="landing_review_3_quote">"The dashboard and Excel export save me an hour every month."</p>
+          <div class="landing-review-author" data-t="landing_review_3_author">Priya K. — Office Manager</div>
+        </div>
+        <div class="landing-review-card">
+          <img class="landing-review-mascot" src="assets/img/mascot-wave.svg" alt="" />
+          <div class="landing-review-stars">★★★★★</div>
+          <p class="landing-review-quote" data-t="landing_review_4_quote">"Simple, friendly, and it just works."</p>
+          <div class="landing-review-author" data-t="landing_review_4_author">Tom N. — Engineering Manager</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- final CTA ---- -->
+    <section class="landing-final-cta">
+      <img src="assets/img/mascot-celebrate.svg" alt="Pal celebrating" />
+      <h2 data-t="landing_final_cta_title">Ready to make office days easier?</h2>
+      <p data-t="landing_final_cta_text">Join thousands of teams already using OfficePal — it's free to get started.</p>
+      <button class="btn landing-cta" data-cta="register" data-t="landing_cta_get_started">Get started free</button>
+    </section>
+
   </div>
 </div>
 
@@ -338,9 +486,9 @@
 
 <div id="toast-container"></div>
 
-<script src="assets/js/i18n.js?v=19"></script>
-<script src="assets/js/theme.js?v=19"></script>
-<script src="assets/js/api.js?v=19"></script>
-<script src="assets/js/app.js?v=19"></script>
+<script src="assets/js/i18n.js?v=20"></script>
+<script src="assets/js/theme.js?v=20"></script>
+<script src="assets/js/api.js?v=20"></script>
+<script src="assets/js/app.js?v=20"></script>
 </body>
 </html>

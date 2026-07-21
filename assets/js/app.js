@@ -170,6 +170,7 @@ async function boot() {
   wireForgotPassword();
   wireStaticButtons();
   wireMessageEditor();
+  wireLandingCtas();
   loadAuthCaptcha("login");
 
   try {
@@ -306,6 +307,23 @@ function wireAuthForms() {
       document.getElementById("register-captcha-answer").value = "";
       loadAuthCaptcha("register");
     }
+  });
+}
+
+/**
+ * Wires every "Log in" / "Get started free" style button on the marketing
+ * landing page (nav bar, hero, mid-page and closing CTAs) — each just
+ * switches the auth card to the right tab and smooth-scrolls it into view,
+ * so people can jump straight from the pitch into signing up without
+ * hunting for the actual form.
+ */
+function wireLandingCtas() {
+  document.querySelectorAll(".landing-cta").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      switchAuthTab(btn.dataset.cta === "register" ? "register" : "login");
+      const anchor = document.getElementById("auth-card-anchor");
+      if (anchor) anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   });
 }
 

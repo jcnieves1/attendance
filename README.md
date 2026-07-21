@@ -270,6 +270,12 @@ your machine's local IP, to try the mobile layout).
     edit, delete, and reorder from either the Admin area or right there on
     **This week**. Edit a message as a different admin and note the label
     updates to show who last edited it and the new timestamp.
+22. Before logging in, scroll through the landing page in front of the login
+    card: a hero pitch, a feature grid, a "How OfficePal works" walkthrough,
+    a stats band, and made-up teammate reviews — all just marketing content,
+    no backend involved. Click any **Get started free** or **Log in** button
+    on the page (nav bar, hero, mid-page, or bottom) and confirm it switches
+    the card to the right tab and smooth-scrolls it into view.
 
 ## Project structure
 
