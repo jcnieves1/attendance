@@ -15,9 +15,13 @@ if (!$teamId) {
 require_member($userId, $teamId);
 
 $stmt = db()->prepare(
-    'SELECT tm.id, tm.content, tm.sort_order, tm.updated_at, u.full_name AS created_by_name
+    'SELECT tm.id, tm.content, tm.sort_order, tm.created_at, tm.updated_at,
+            creator.full_name AS created_by_name,
+            editor.full_name AS updated_by_name,
+            tm.created_by, tm.updated_by
      FROM team_messages tm
-     JOIN users u ON u.id = tm.created_by
+     JOIN users creator ON creator.id = tm.created_by
+     LEFT JOIN users editor ON editor.id = tm.updated_by
      WHERE tm.team_id = ?
      ORDER BY tm.sort_order ASC, tm.created_at ASC'
 );

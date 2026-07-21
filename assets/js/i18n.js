@@ -141,6 +141,8 @@ const DICT = {
     message_empty_error: "Please write a message before saving.",
     richtext_link_prompt: "Enter a URL (must start with http://, https://, or mailto:)",
     richtext_link_invalid: "That doesn't look like a valid link. Please use http://, https://, or mailto:.",
+    message_posted_by: "Posted by {name}",
+    message_last_edited_by: "Last edited by {name}",
 
     // Weekday / calendar tracking mode
     tracking_mode_title: "Days tracked",
@@ -406,6 +408,8 @@ const DICT = {
     message_empty_error: "Escribe un mensaje antes de guardar.",
     richtext_link_prompt: "Ingresa una URL (debe comenzar con http://, https:// o mailto:)",
     richtext_link_invalid: "Ese enlace no parece válido. Usa http://, https:// o mailto:.",
+    message_posted_by: "Publicado por {name}",
+    message_last_edited_by: "Última edición de {name}",
 
     tracking_mode_title: "Días registrados",
     tracking_mode_hint: "Elige si este equipo registra solo de lunes a viernes o la semana completa — esto oculta los días que no necesitas en toda la app.",

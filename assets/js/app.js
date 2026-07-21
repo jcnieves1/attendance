@@ -1114,10 +1114,18 @@ function buildMessagesBoardHtml(messages, editable) {
   if (!messages.length) {
     return editable ? `<p style="color:var(--text-muted); font-size:13px;">${t("no_messages_yet")}</p>` : "";
   }
-  return messages.map((m) => `
+  return messages.map((m) => {
+    const wasEdited = m.updated_by_name && m.updated_by && String(m.updated_by) !== String(m.created_by);
+    const metaBits = [t("message_posted_by").replace("{name}", escapeHtml(m.created_by_name))];
+    if (wasEdited) metaBits.push(t("message_last_edited_by").replace("{name}", escapeHtml(m.updated_by_name)));
+    metaBits.push(formatDateTimeHuman(m.updated_at));
+    return `
     <div class="message-board-item" data-id="${m.id}" ${editable ? 'draggable="true"' : ""}>
       ${editable ? '<span class="message-drag-handle" title="Drag to reorder">&#10495;</span>' : ""}
-      <div class="message-board-content">${m.content}</div>
+      <div class="message-board-body">
+        <div class="message-board-content">${m.content}</div>
+        <div class="message-board-meta">${metaBits.join(" &middot; ")}</div>
+      </div>
       ${editable ? `
         <div class="message-board-actions">
           <button class="btn ghost small" data-action="edit-message" data-id="${m.id}">${t("edit_button")}</button>
@@ -1125,7 +1133,8 @@ function buildMessagesBoardHtml(messages, editable) {
         </div>
       ` : ""}
     </div>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function wireMessageBoardActions(container, teamId, onChange) {

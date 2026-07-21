@@ -265,9 +265,11 @@ your machine's local IP, to try the mobile layout).
 21. In **Admin area** → **Messages board**, click **+ Add message**, write
     something with the bold/italic/underline/list/link toolbar, and save —
     it appears above **My favorite office days** on everyone's **This week**
-    tab. Drag messages by the handle to reorder them; employees see the
-    board read-only, while owners/admins can edit, delete, and reorder from
-    either the Admin area or right there on **This week**.
+    tab, labeled with who posted it and when. Drag messages by the handle to
+    reorder them; employees see the board read-only, while owners/admins can
+    edit, delete, and reorder from either the Admin area or right there on
+    **This week**. Edit a message as a different admin and note the label
+    updates to show who last edited it and the new timestamp.
 
 ## Project structure
 
