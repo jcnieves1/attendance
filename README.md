@@ -34,6 +34,10 @@ itself, with no email dependency anywhere.
   Forest, Midnight, Peach, Cloud), both saved per-user.
 - Fully responsive layout: a slide-in sidebar drawer with a hamburger toggle
   on small screens, a stacked topbar, and grids/modals that reflow for phones.
+- A global loading overlay covers the screen and blocks every other click
+  for as long as any request to the server is in flight, so it's always
+  obvious the app is waiting on something and there's no way to fire off a
+  second action (e.g. a double-submit) while the first is still processing.
 - Both dashboards (personal and Admin area) can be filtered by year, or
   narrowed further to a single month, so a full year of data doesn't have to
   be scanned at once.
@@ -314,6 +318,13 @@ your machine's local IP, to try the mobile layout).
     instead of showing an empty list. Do the same from **Admin area** →
     **Attendance dashboard**'s heatmap — it works identically there, and
     respects whichever teammates are currently selected in the member filter.
+26. Trigger any action that hits the server — toggling a day on **This
+    week**, saving suggested days, sending an invite, whatever's handy — and
+    notice the full-screen "Loading…" overlay that appears for the
+    (typically brief) duration of the request. While it's up, clicks
+    anywhere else on the page don't do anything; it only goes away once the
+    server has actually responded, so there's never a moment where you're
+    not sure whether an action went through or can be triggered twice.
 
 ## Project structure
 

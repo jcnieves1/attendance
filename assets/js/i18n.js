@@ -4,6 +4,7 @@ const DICT = {
   en: {
     app_name: "OfficePal",
     tagline: "Your friendly office attendance buddy",
+    loading_overlay_text: "Loading…",
     nav_teams: "My Teams",
     nav_dashboard: "My Dashboard",
     nav_invitations: "Invitations",
@@ -337,6 +338,7 @@ const DICT = {
   es: {
     app_name: "OfficePal",
     tagline: "Tu amigo simpático para la asistencia a la oficina",
+    loading_overlay_text: "Cargando…",
     nav_teams: "Mis equipos",
     nav_dashboard: "Mi panel",
     nav_invitations: "Invitaciones",
