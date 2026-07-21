@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>OfficePal — office attendance, made friendly</title>
 <link rel="icon" href="assets/img/mascot-wave.svg" />
-<link rel="stylesheet" href="assets/css/styles.css?v=21" />
+<link rel="stylesheet" href="assets/css/styles.css?v=22" />
 </head>
 <body>
 
@@ -245,6 +245,7 @@
         <span class="theme-dot peach" data-theme="peach" title="Peach"></span>
         <span class="theme-dot cloud" data-theme="cloud" title="Cloud"></span>
       </div>
+      <img id="topbar-user-avatar" class="avatar-thumb hidden" alt="" />
       <span id="current-user-name" class="current-user-name"></span>
       <button id="account-btn" class="icon-btn" aria-label="Account">⚙</button>
       <button id="logout-btn" class="btn ghost small" data-t="nav_logout">Log out</button>
@@ -361,7 +362,20 @@
   <div class="modal" style="text-align:left; max-width:420px;">
     <h2 data-t="my_account_title">My account</h2>
 
-    <h3 style="margin-bottom:0;" data-t="change_password_title">Change password</h3>
+    <h3 style="margin-bottom:0;" data-t="profile_picture_title">Profile picture</h3>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:2px;" data-t="profile_picture_hint"></p>
+    <div style="display:flex; align-items:center; gap:16px; margin-top:10px;">
+      <img id="account-avatar-preview" class="avatar-preview hidden" alt="" />
+      <div id="account-avatar-placeholder" class="avatar-preview avatar-placeholder"></div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label class="btn small" for="account-avatar-input" style="text-align:center; margin:0;" data-t="upload_photo_button">Upload photo</label>
+        <input type="file" id="account-avatar-input" accept="image/png,image/jpeg,image/gif,image/webp" class="hidden" />
+        <button class="btn ghost small" id="account-remove-avatar-btn" data-t="remove_photo_button">Remove photo</button>
+      </div>
+    </div>
+    <div class="error-msg" id="account-avatar-error"></div>
+
+    <h3 style="margin-top:22px; margin-bottom:0;" data-t="change_password_title">Change password</h3>
     <label data-t="current_password_label">Current password</label>
     <input type="password" id="account-current-password" autocomplete="current-password" />
     <label data-t="new_password_label">New password</label>
@@ -452,7 +466,10 @@
 <!-- ======================= MODAL: person attendance calendar (admin) ======================= -->
 <div id="modal-person-calendar" class="modal-backdrop hidden">
   <div class="modal" style="text-align:left; max-width:460px;">
-    <h2 id="person-cal-name" style="margin-bottom:2px;"></h2>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <img id="person-cal-avatar" class="avatar-thumb avatar-thumb-lg hidden" alt="" />
+      <h2 id="person-cal-name" style="margin-bottom:2px;"></h2>
+    </div>
     <div id="person-cal-period" style="color:var(--text-muted); font-size:13px; margin-bottom:10px;"></div>
     <div id="person-cal-body"></div>
     <div class="modal-actions">
@@ -490,9 +507,9 @@
 
 <div id="toast-container"></div>
 
-<script src="assets/js/i18n.js?v=21"></script>
-<script src="assets/js/theme.js?v=21"></script>
-<script src="assets/js/api.js?v=21"></script>
-<script src="assets/js/app.js?v=21"></script>
+<script src="assets/js/i18n.js?v=22"></script>
+<script src="assets/js/theme.js?v=22"></script>
+<script src="assets/js/api.js?v=22"></script>
+<script src="assets/js/app.js?v=22"></script>
 </body>
 </html>

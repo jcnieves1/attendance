@@ -51,11 +51,14 @@ itself, with no email dependency anywhere.
 
 ## Requirements
 
-- PHP 8.0+ with the `pdo_mysql`, `zip`, and `dom` extensions (all enabled by
-  default in most PHP installs). `zip` is only needed for the Admin area's
-  Excel export, and `dom` only for sanitizing Messages board rich text — the
-  rest of the app works fine without either.
+- PHP 8.0+ with the `pdo_mysql`, `zip`, `dom`, and `gd` extensions (all
+  enabled by default in most PHP installs). `zip` is only needed for the
+  Admin area's Excel export, `dom` only for sanitizing Messages board rich
+  text, and `gd` only for resizing profile picture uploads — the rest of the
+  app works fine without any of the three.
 - MySQL 8+ or MariaDB 10.4+.
+- The `uploads/avatars/` folder must be writable by the web server (it's
+  where resized profile pictures are stored).
 
 No outgoing mail server, API key, or Composer dependency is needed — OfficePal
 doesn't send email at all, and its Excel export is written with PHP's built-in
@@ -167,6 +170,20 @@ It adds a `team_messages` table. Message content is always passed through
 `sanitize_rich_text()` (a whitelist-based sanitizer built on PHP's
 `DOMDocument` — see api/helpers.php) before being written here, stripping
 anything beyond a small safe set of formatting tags.
+
+If you're upgrading further to add profile pictures, also run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v11_avatar.sql
+```
+
+It adds a nullable `avatar_filename` column to `users`. Uploaded photos never
+touch the database or disk in their original form — `process_avatar_upload()`
+(see api/helpers.php) center-crops them to a square, downsizes them to a
+fixed 256x256 resolution, and re-encodes them as a quality-reduced JPEG
+before saving to `uploads/avatars/`, so storage stays small and bounded no
+matter what was uploaded. Requires the `gd` PHP extension, and
+`uploads/avatars/` must be writable by the web server.
 
 ## 2. Configure the app
 
@@ -281,6 +298,15 @@ your machine's local IP, to try the mobile layout).
     **Peach** (a pastel warm apricot/rose palette) and **Cloud** (a mostly
     white, low-contrast palette with a whisper of dusty blue). The choice is
     saved to your account like the other three.
+24. Click the ⚙ icon → **My account** → **Upload photo** and pick any image —
+    even a large, non-square one. It's automatically center-cropped, resized
+    to a small fixed square, and re-compressed on the server, and appears
+    right away as a rounded thumbnail in the account modal and next to your
+    name in the topbar. Go to **My Attendance**, **Admin area** → **Members**,
+    and the **Admin dashboard**'s "Per person" breakdown, and confirm your
+    photo shows up next to your name in all three (teammates without a photo
+    just show their name, same as before). Click **Remove photo** and
+    confirm it disappears everywhere and the file is gone from the server.
 
 ## Project structure
 
@@ -294,6 +320,7 @@ OfficePal/
   api/                     PHP backend (session-based auth, JSON responses)
     config.php, db.php, helpers.php, xlsx_helper.php
     auth/ teams/ invitations/ attendance/ favorites/ dashboard/ users/
+  uploads/avatars/         Resized profile picture JPEGs (must be writable)
   database/
     schema.sql                        Fresh-install MySQL schema
     migrate_v2_inapp_invites.sql       Upgrade path: email invites -> in-app
@@ -306,6 +333,7 @@ OfficePal/
     migrate_v8_default_team.sql       Upgrade path: personal default team
     migrate_v9_login_attempts.sql     Upgrade path: login CAPTCHA + rate limit
     migrate_v10_team_messages.sql     Upgrade path: Admin area messages board
+    migrate_v11_avatar.sql            Upgrade path: profile pictures
 ```
 
 ## Notes on the design

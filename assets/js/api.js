@@ -19,6 +19,20 @@ async function apiPost(path, body = {}) {
   return parseApiResponse(res);
 }
 
+/**
+ * Like apiPost, but for a raw FormData body (file uploads) instead of JSON —
+ * the browser sets its own multipart Content-Type header with the correct
+ * boundary, so we must not set one ourselves.
+ */
+async function apiUpload(path, formData) {
+  const res = await fetch(`${API_BASE}/${path}`, {
+    method: "POST",
+    credentials: "same-origin",
+    body: formData,
+  });
+  return parseApiResponse(res);
+}
+
 async function parseApiResponse(res) {
   let data;
   try {

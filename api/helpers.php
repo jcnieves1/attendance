@@ -65,9 +65,12 @@ function current_user(): ?array
     if (!$userId) {
         return null;
     }
-    $stmt = db()->prepare('SELECT id, email, full_name, language, theme, default_team_id, security_question, created_at FROM users WHERE id = ?');
+    $stmt = db()->prepare('SELECT id, email, full_name, language, theme, default_team_id, security_question, avatar_filename, created_at FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
+    if ($user) {
+        $user['avatar_url'] = avatar_url($user['avatar_filename']);
+    }
     return $user ?: null;
 }
 
@@ -334,4 +337,139 @@ function verify_captcha_answer($submitted): bool
         return false;
     }
     return is_numeric($submitted) && (int) $submitted === (int) $expected;
+}
+
+/**
+ * Every profile picture is stored at exactly this pixel size (square) —
+ * plenty crisp for the small rounded thumbnails used throughout the UI
+ * (even on retina displays), while keeping each file reliably small
+ * regardless of what was originally uploaded.
+ */
+const AVATAR_SIZE = 256;
+
+/** Absolute filesystem path to the avatar upload directory, creating it on first use. */
+function avatar_dir(): string
+{
+    $dir = __DIR__ . '/../uploads/avatars';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+    return $dir;
+}
+
+/** Web-relative URL for a stored avatar filename, or null if none. */
+function avatar_url(?string $filename): ?string
+{
+    return $filename ? 'uploads/avatars/' . $filename : null;
+}
+
+/**
+ * Deletes a previously-generated avatar file from disk, if it still exists.
+ * basename() guards against any path-separator shenanigans, even though
+ * every filename ever stored is one process_avatar_upload() generated
+ * itself (never a user-supplied name).
+ */
+function delete_avatar_file(string $filename): void
+{
+    $path = avatar_dir() . '/' . basename($filename);
+    if (is_file($path)) {
+        unlink($path);
+    }
+}
+
+/**
+ * Validates an uploaded image, center-crops it to a square (using the
+ * shorter side), downsizes it to a fixed AVATAR_SIZE x AVATAR_SIZE
+ * resolution, and re-encodes it as a quality-reduced JPEG — regardless of
+ * the original format, dimensions, or file size, every stored avatar ends
+ * up small and uniform (typically well under 50 KB). Returns the generated
+ * filename; the caller is responsible for saving it on the user record and
+ * deleting whatever avatar it replaces (see delete_avatar_file()).
+ *
+ * Throws RuntimeException with a user-facing message if the upload isn't a
+ * usable image.
+ */
+function process_avatar_upload(string $tmpPath): string
+{
+    $info = @getimagesize($tmpPath);
+    if (!$info) {
+        throw new RuntimeException('That file does not look like a valid image.');
+    }
+    [$width, $height, $type] = $info;
+
+    // Guards against decompression-bomb-style images (a small file that
+    // decodes to an enormous bitmap) before GD ever allocates the full-size
+    // in-memory image.
+    if ($width <= 0 || $height <= 0 || $width * $height > 30000000) {
+        throw new RuntimeException('That image is too large. Please use a smaller photo.');
+    }
+
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            $src = @imagecreatefromjpeg($tmpPath);
+            break;
+        case IMAGETYPE_PNG:
+            $src = @imagecreatefrompng($tmpPath);
+            break;
+        case IMAGETYPE_GIF:
+            $src = @imagecreatefromgif($tmpPath);
+            break;
+        case IMAGETYPE_WEBP:
+            $src = function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($tmpPath) : false;
+            break;
+        default:
+            $src = false;
+    }
+    if (!$src) {
+        throw new RuntimeException('Please upload a JPEG, PNG, GIF, or WebP image.');
+    }
+
+    // Auto-rotate JPEGs per their EXIF orientation tag, when the exif
+    // extension happens to be available — otherwise a phone photo taken in
+    // portrait mode can end up stored sideways.
+    if ($type === IMAGETYPE_JPEG && function_exists('exif_read_data')) {
+        $exif = @exif_read_data($tmpPath);
+        if ($exif && !empty($exif['Orientation'])) {
+            $src = apply_exif_orientation($src, (int) $exif['Orientation']);
+            $width = imagesx($src);
+            $height = imagesy($src);
+        }
+    }
+
+    // Center-crop to a square using the shorter side, then resize (down for
+    // any normal photo, occasionally up for a tiny one) to a fixed, uniform
+    // resolution — this is what actually keeps storage bounded no matter
+    // what was uploaded, not just the JPEG re-encode below.
+    $side = min($width, $height);
+    $srcX = (int) (($width - $side) / 2);
+    $srcY = (int) (($height - $side) / 2);
+
+    $square = imagecreatetruecolor(AVATAR_SIZE, AVATAR_SIZE);
+    // Flatten any transparency (PNG/GIF) onto white — JPEG has no alpha
+    // channel, and a profile photo doesn't need one.
+    $white = imagecolorallocate($square, 255, 255, 255);
+    imagefill($square, 0, 0, $white);
+    imagecopyresampled($square, $src, 0, 0, $srcX, $srcY, AVATAR_SIZE, AVATAR_SIZE, $side, $side);
+    imagedestroy($src);
+
+    $filename = 'avatar_' . bin2hex(random_bytes(8)) . '.jpg';
+    imagejpeg($square, avatar_dir() . '/' . $filename, 82);
+    imagedestroy($square);
+
+    return $filename;
+}
+
+/** Rotates a GD image per a JPEG EXIF Orientation tag (anything else is a no-op). */
+function apply_exif_orientation($image, int $orientation)
+{
+    switch ($orientation) {
+        case 3:
+            return imagerotate($image, 180, 0);
+        case 6:
+            return imagerotate($image, -90, 0);
+        case 8:
+            return imagerotate($image, 90, 0);
+        default:
+            return $image;
+    }
 }

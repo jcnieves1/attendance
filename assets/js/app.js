@@ -254,7 +254,97 @@ function enterApp() {
   document.getElementById("app-lang").value = APP.user.language || getLang();
   setLang(APP.user.language || getLang());
   if (APP.user.theme) setTheme(APP.user.theme);
+  renderTopbarAvatar();
   loadSidebarData();
+}
+
+/** Keeps the small round avatar next to the user's name in the topbar in
+ * sync with APP.user.avatar_filename — called on login and again right
+ * after an upload/removal in "My account". */
+function renderTopbarAvatar() {
+  const img = document.getElementById("topbar-user-avatar");
+  const filename = APP.user && APP.user.avatar_filename;
+  if (filename) {
+    img.src = avatarUrl(filename);
+    img.classList.remove("hidden");
+  } else {
+    img.src = "";
+    img.classList.add("hidden");
+  }
+}
+
+/** Shows either the real photo or the plain placeholder circle in "My
+ * account", based on the current APP.user.avatar_filename. */
+function renderAccountAvatarPreview() {
+  const img = document.getElementById("account-avatar-preview");
+  const placeholder = document.getElementById("account-avatar-placeholder");
+  const filename = APP.user && APP.user.avatar_filename;
+  if (filename) {
+    img.src = avatarUrl(filename);
+    img.classList.remove("hidden");
+    placeholder.classList.add("hidden");
+  } else {
+    img.src = "";
+    img.classList.add("hidden");
+    placeholder.classList.remove("hidden");
+  }
+}
+
+/**
+ * Wires the profile-picture controls in "My account": choosing a file
+ * uploads it right away (the server does all the actual resizing/
+ * compression — see process_avatar_upload() in api/helpers.php), and
+ * "Remove photo" deletes it from the server. Both update APP.user and every
+ * on-screen avatar (topbar + account preview) immediately, without needing a
+ * full page reload.
+ */
+function wireAccountAvatarControls() {
+  const input = document.getElementById("account-avatar-input");
+  const errorEl = document.getElementById("account-avatar-error");
+
+  input.addEventListener("change", async () => {
+    const file = input.files && input.files[0];
+    input.value = ""; // always reset, so choosing the same file again still fires "change"
+    if (!file) return;
+    errorEl.textContent = "";
+
+    // Quick client-side sanity checks for instant feedback — the server
+    // re-validates everything itself regardless (real image check, size
+    // ceiling), so this is just to avoid a round trip for obvious mistakes.
+    if (!/^image\/(jpeg|png|gif|webp)$/.test(file.type)) {
+      errorEl.textContent = t("avatar_invalid_error");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      errorEl.textContent = t("avatar_too_large_error");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+    try {
+      const res = await apiUpload("auth/upload_avatar.php", formData);
+      APP.user.avatar_filename = res.avatar_filename;
+      renderAccountAvatarPreview();
+      renderTopbarAvatar();
+      showToast(t("avatar_updated_toast"));
+    } catch (err) {
+      errorEl.textContent = err.message || t("error_generic");
+    }
+  });
+
+  document.getElementById("account-remove-avatar-btn").addEventListener("click", async () => {
+    errorEl.textContent = "";
+    try {
+      await apiPost("auth/remove_avatar.php", {});
+      APP.user.avatar_filename = null;
+      renderAccountAvatarPreview();
+      renderTopbarAvatar();
+      showToast(t("avatar_removed_toast"));
+    } catch (err) {
+      errorEl.textContent = err.message || t("error_generic");
+    }
+  });
 }
 
 /* -------------------------------- auth forms ------------------------------ */
@@ -541,8 +631,10 @@ function wireStaticButtons() {
     }
   });
 
-  // My account (change password + security question).
+  // My account (profile picture + change password + security question).
   document.getElementById("account-btn").addEventListener("click", () => {
+    renderAccountAvatarPreview();
+    document.getElementById("account-avatar-error").textContent = "";
     document.getElementById("account-current-password").value = "";
     document.getElementById("account-new-password").value = "";
     document.getElementById("account-password-error").textContent = "";
@@ -553,6 +645,8 @@ function wireStaticButtons() {
     openModal("modal-account");
   });
   document.getElementById("close-account-modal").addEventListener("click", () => closeModal("modal-account"));
+
+  wireAccountAvatarControls();
 
   document.getElementById("account-change-password-btn").addEventListener("click", async () => {
     const errorEl = document.getElementById("account-password-error");
@@ -1524,7 +1618,7 @@ function renderTeamDashboard(rows, year, month) {
   const body = document.getElementById("team-dash-body");
   const byMember = {};
   rows.forEach((r) => {
-    byMember[r.user_id] = byMember[r.user_id] || { id: r.user_id, name: r.full_name, count: 0 };
+    byMember[r.user_id] = byMember[r.user_id] || { id: r.user_id, name: r.full_name, avatar: r.avatar_filename, count: 0 };
     byMember[r.user_id].count++;
   });
   const members = Object.values(byMember).sort((a, b) => b.count - a.count);
@@ -1546,8 +1640,11 @@ function renderTeamDashboard(rows, year, month) {
     </div>
     <div style="margin-top:20px;">
       ${members.length ? members.map((m) => `
-        <div class="member-row" data-user-id="${m.id}" data-user-name="${escapeHtml(m.name)}" title="${t("view_calendar_hint")}">
-          <div class="member-name">${escapeHtml(m.name)}</div>
+        <div class="member-row" data-user-id="${m.id}" data-user-name="${escapeHtml(m.name)}" data-user-avatar="${m.avatar || ""}" title="${t("view_calendar_hint")}">
+          <div class="member-row-identity">
+            ${avatarImgHtml(m.avatar)}
+            <div class="member-name">${escapeHtml(m.name)}</div>
+          </div>
           <div class="member-meta">${m.count} ${t("days_attended")}</div>
         </div>
       `).join("") : `<p style="color:var(--text-muted);">—</p>`}
@@ -1556,7 +1653,7 @@ function renderTeamDashboard(rows, year, month) {
 
   body.querySelectorAll(".member-row[data-user-id]").forEach((row) => {
     row.addEventListener("click", () => {
-      openPersonCalendarModal(parseInt(row.dataset.userId, 10), row.dataset.userName, year, month, rows);
+      openPersonCalendarModal(parseInt(row.dataset.userId, 10), row.dataset.userName, row.dataset.userAvatar, year, month, rows);
     });
   });
 }
@@ -2186,9 +2283,12 @@ function renderMembersList(members, teamId, isOwner, isManager) {
       </button>
     ` : "";
     row.innerHTML = `
-      <div>
-        <div class="member-name">${escapeHtml(m.full_name)}</div>
-        <div class="member-meta">${escapeHtml(m.email)}</div>
+      <div class="member-row-identity">
+        ${avatarImgHtml(m.avatar_filename)}
+        <div>
+          <div class="member-name">${escapeHtml(m.full_name)}</div>
+          <div class="member-meta">${escapeHtml(m.email)}</div>
+        </div>
       </div>
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         <span class="role-badge ${m.role === "employee" ? "employee" : ""}">${t("role_" + m.role)}</span>
@@ -2248,7 +2348,7 @@ function renderAdminDashboard(data, year, month, selectedMemberIds) {
     : buildYearHeatmapCalendarsHtml(attendance, year, trackWeekends);
 
   const byMember = {};
-  members.forEach((m) => { byMember[m.id] = { id: m.id, name: m.full_name, count: 0 }; });
+  members.forEach((m) => { byMember[m.id] = { id: m.id, name: m.full_name, avatar: m.avatar_filename, count: 0 }; });
   attendance.forEach((a) => {
     if (byMember[a.user_id]) byMember[a.user_id].count++;
   });
@@ -2288,8 +2388,11 @@ function renderAdminDashboard(data, year, month, selectedMemberIds) {
 
     <h3 style="margin-top:20px;">${t("per_person")} — ${escapeHtml(periodLabel)}</h3>
     ${rows.length ? rows.map((r) => `
-      <div class="person-breakdown-row" data-user-id="${r.id}" data-user-name="${escapeHtml(r.name)}" title="${t("view_calendar_hint")}">
-        <div class="person-breakdown-name">${escapeHtml(r.name)}</div>
+      <div class="person-breakdown-row" data-user-id="${r.id}" data-user-name="${escapeHtml(r.name)}" data-user-avatar="${r.avatar || ""}" title="${t("view_calendar_hint")}">
+        <div class="person-breakdown-identity">
+          ${avatarImgHtml(r.avatar)}
+          <div class="person-breakdown-name">${escapeHtml(r.name)}</div>
+        </div>
         <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, r.percent)}%;"></div></div>
         <div class="person-breakdown-stat">${r.count}/${possibleDays} <span class="person-breakdown-percent">(${r.percent}%)</span></div>
       </div>
@@ -2298,7 +2401,7 @@ function renderAdminDashboard(data, year, month, selectedMemberIds) {
 
   body.querySelectorAll(".person-breakdown-row[data-user-id]").forEach((row) => {
     row.addEventListener("click", () => {
-      openPersonCalendarModal(parseInt(row.dataset.userId, 10), row.dataset.userName, year, month, data.attendance);
+      openPersonCalendarModal(parseInt(row.dataset.userId, 10), row.dataset.userName, row.dataset.userAvatar, year, month, data.attendance);
     });
   });
 }
@@ -2312,7 +2415,7 @@ function renderAdminDashboard(data, year, month, selectedMemberIds) {
  * new request — those rows are scoped to the same year/month range already
  * shown on screen.
  */
-function openPersonCalendarModal(userId, name, year, month, attendanceRows) {
+function openPersonCalendarModal(userId, name, avatarFilename, year, month, attendanceRows) {
   if (!attendanceRows) return;
 
   // The breakdown can be viewed for a whole year (no month filter) — in that
@@ -2333,6 +2436,14 @@ function openPersonCalendarModal(userId, name, year, month, attendanceRows) {
   );
 
   document.getElementById("person-cal-name").textContent = name;
+  const avatarImg = document.getElementById("person-cal-avatar");
+  if (avatarFilename) {
+    avatarImg.src = avatarUrl(avatarFilename);
+    avatarImg.classList.remove("hidden");
+  } else {
+    avatarImg.src = "";
+    avatarImg.classList.add("hidden");
+  }
   document.getElementById("person-cal-period").textContent = `${t(MONTH_KEYS[calMonth - 1])} ${year}`;
   document.getElementById("person-cal-body").innerHTML = `
     <div style="font-size:22px; font-weight:700; margin-bottom:6px;">${checkedDates.size} <span style="font-size:13px; color:var(--text-muted); font-weight:500;">${t("total_days_month")}</span></div>
@@ -2347,4 +2458,20 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str || "";
   return div.innerHTML;
+}
+
+/** Web URL for a stored avatar filename, or null if the person has none. */
+function avatarUrl(filename) {
+  return filename ? `uploads/avatars/${filename}` : null;
+}
+
+/**
+ * Builds a rounded avatar <img> for a name row — but only when the person
+ * actually has one uploaded. Returns "" otherwise, so every call site just
+ * falls back to showing the plain name with no image, exactly like before
+ * this feature existed. extraClass adds a size modifier (e.g. "avatar-thumb-lg").
+ */
+function avatarImgHtml(filename, extraClass = "") {
+  if (!filename) return "";
+  return `<img class="avatar-thumb ${extraClass}" src="${avatarUrl(filename)}" alt="" />`;
 }

@@ -329,10 +329,25 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 .heat-cell[data-level="4"] { background: var(--heat-4); }
 .heatmap-legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 
-.member-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.member-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; }
 .member-row:last-child { border-bottom: none; }
 .member-name { font-weight: 600; }
 .member-meta { font-size: 12px; color: var(--text-muted); }
+.member-row-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+/* ---------------- Profile picture avatars ---------------- */
+/* Only rendered when a person has actually uploaded a photo — otherwise the
+   UI just falls back to showing their name with no image, same as before
+   this feature existed. */
+.avatar-thumb { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--surface-alt); }
+.avatar-thumb-lg { width: 40px; height: 40px; }
+.avatar-preview {
+  width: 84px; height: 84px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--surface-alt);
+}
+.avatar-placeholder {
+  display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--text-muted);
+}
+.avatar-placeholder::after { content: "🙂"; }
 
 /* Teammates' attendance rows (personal dashboard) double as a click target
    to open that person's calendar — the admin member-management list reuses
@@ -361,15 +376,18 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
   border-radius: 10px; cursor: pointer; transition: background 0.12s ease;
 }
 .person-breakdown-row:hover { background: var(--surface-alt); }
+.person-breakdown-identity { display: flex; align-items: center; gap: 8px; flex: 0 0 130px; min-width: 0; }
 .person-breakdown-name {
-  flex: 0 0 130px; font-size: 13px; font-weight: 600; overflow: hidden;
+  flex: 1; min-width: 0; font-size: 13px; font-weight: 600; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
 }
 .person-breakdown-stat { flex: 0 0 92px; text-align: right; font-size: 12px; color: var(--text-muted); }
 .person-breakdown-percent { color: var(--text); font-weight: 600; }
 
 @media (max-width: 480px) {
-  .person-breakdown-name { flex-basis: 90px; font-size: 12px; }
+  .person-breakdown-identity { flex-basis: 90px; }
+  .person-breakdown-identity .avatar-thumb { width: 24px; height: 24px; }
+  .person-breakdown-name { font-size: 12px; }
   .person-breakdown-stat { flex-basis: 76px; font-size: 11px; }
   .dash-summary-stat { padding: 8px 12px; min-width: 80px; }
   .dash-summary-value { font-size: 18px; }

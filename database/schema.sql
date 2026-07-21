@@ -18,6 +18,11 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- at registration or later from My account). If a user never sets one, the
 -- only way to recover their password is for a manager/admin of one of their
 -- teams to reset it (see api/teams/reset_member_password.php).
+-- avatar_filename is just a generated basename (e.g. "avatar_a1b2c3.jpg"),
+-- never the original upload's filename — the actual file always lives in
+-- uploads/avatars/ after being center-cropped, downsized, and re-encoded by
+-- process_avatar_upload() (see api/helpers.php). NULL means no photo, and
+-- the UI falls back to showing just the name with no image.
 CREATE TABLE IF NOT EXISTS users (
     id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     email                VARCHAR(190) NOT NULL UNIQUE,
@@ -28,6 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
     default_team_id      INT UNSIGNED NULL COMMENT 'team auto-selected on login, if still a member of it',
     security_question    VARCHAR(150) NULL,
     security_answer_hash VARCHAR(255) NULL,
+    avatar_filename      VARCHAR(190) NULL COMMENT 'generated basename under uploads/avatars/, or NULL',
     created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

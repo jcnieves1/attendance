@@ -18,7 +18,7 @@ if (!$team) {
 }
 
 $stmt = $pdo->prepare(
-    'SELECT u.id, u.full_name, u.email, tm.role, tm.joined_at
+    'SELECT u.id, u.full_name, u.email, u.avatar_filename, tm.role, tm.joined_at
      FROM team_members tm
      JOIN users u ON u.id = tm.user_id
      WHERE tm.team_id = ? AND tm.status = "active"

@@ -1,0 +1,8 @@
+# Defense in depth (Apache only — harmless if this app is served some other
+# way): uploaded avatars are always server-generated JPEGs written by
+# process_avatar_upload() with a filename we chose ourselves, so nothing
+# executable should ever land here. This just makes sure of it, in case a
+# future change to this folder's contents ever gets that wrong.
+<FilesMatch "\.(php|php\d|phtml|pl|py|cgi|sh)$">
+    Require all denied
+</FilesMatch>

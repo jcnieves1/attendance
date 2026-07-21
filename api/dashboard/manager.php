@@ -36,7 +36,7 @@ $stmt->execute([$teamId, $from, $to]);
 $rows = $stmt->fetchAll();
 
 $stmt = db()->prepare(
-    'SELECT u.id, u.full_name FROM team_members tm JOIN users u ON u.id = tm.user_id
+    'SELECT u.id, u.full_name, u.avatar_filename FROM team_members tm JOIN users u ON u.id = tm.user_id
      WHERE tm.team_id = ? AND tm.status = "active" ORDER BY u.full_name'
 );
 $stmt->execute([$teamId]);
