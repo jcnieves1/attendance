@@ -507,6 +507,38 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 }
 .invite-list-item:last-child { border-bottom: none; }
 
+/* ---------------- Messages board (Admin area + This week tab) ---------------- */
+.message-board-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.message-board-item:last-child { border-bottom: none; }
+.message-board-item.dragging { opacity: 0.4; }
+.message-drag-handle {
+  cursor: grab; color: var(--text-muted); font-size: 16px; line-height: 1; padding-top: 2px; user-select: none; flex-shrink: 0;
+}
+.message-drag-handle:active { cursor: grabbing; }
+.message-board-content { flex: 1; min-width: 0; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+.message-board-content p { margin: 0 0 8px; }
+.message-board-content p:last-child { margin-bottom: 0; }
+.message-board-content ul, .message-board-content ol { margin: 4px 0 8px 20px; padding: 0; }
+.message-board-content a { color: var(--primary); }
+.message-board-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ---------------- Rich text editor (add/edit message modal) ---------------- */
+.richtext-toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.richtext-toolbar button {
+  border: 1px solid var(--border); background: var(--surface-alt); color: var(--text);
+  border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; min-width: 36px;
+}
+.richtext-toolbar button:hover { background: var(--surface); border-color: var(--primary); }
+.richtext-editor {
+  margin-top: 8px; min-height: 120px; max-height: 320px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  font-size: 14px; line-height: 1.5; background: var(--surface);
+}
+.richtext-editor:focus { outline: none; border-color: var(--primary); }
+.richtext-editor ul, .richtext-editor ol { margin: 4px 0 4px 20px; padding: 0; }
+
 /* ============================================================================
    Mobile responsiveness
    ============================================================================ */

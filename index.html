@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>OfficePal — office attendance, made friendly</title>
 <link rel="icon" href="assets/img/mascot-wave.svg" />
-<link rel="stylesheet" href="assets/css/styles.css?v=17" />
+<link rel="stylesheet" href="assets/css/styles.css?v=18" />
 </head>
 <body>
 
@@ -264,6 +264,39 @@
   </div>
 </div>
 
+<!-- ======================= MODAL: add/edit a messages board message ======================= -->
+<div id="modal-message-editor" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left; max-width:520px;">
+    <h2 id="message-editor-title" data-t="add_message_title">Add a message</h2>
+    <div class="richtext-toolbar">
+      <button type="button" data-cmd="bold" title="Bold"><b>B</b></button>
+      <button type="button" data-cmd="italic" title="Italic"><i>I</i></button>
+      <button type="button" data-cmd="underline" title="Underline"><u>U</u></button>
+      <button type="button" data-cmd="insertUnorderedList" title="Bullet list">&#8226; List</button>
+      <button type="button" data-cmd="insertOrderedList" title="Numbered list">1. List</button>
+      <button type="button" id="richtext-link-btn" title="Insert link">&#128279;</button>
+    </div>
+    <div id="message-editor-content" class="richtext-editor" contenteditable="true"></div>
+    <div class="error-msg" id="message-editor-error"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancel-message-editor" data-t="cancel">Cancel</button>
+      <button class="btn" id="save-message-editor" data-t="save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL: confirm deleting a messages board message ======================= -->
+<div id="modal-confirm-delete-message" class="modal-backdrop hidden">
+  <div class="modal" style="text-align:left; max-width:400px;">
+    <h2 data-t="confirm_delete_message_title">Delete this message?</h2>
+    <p style="color:var(--text-muted); font-size:14px;" data-t="confirm_delete_message_text"></p>
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancel-delete-message-btn" data-t="cancel">Cancel</button>
+      <button class="btn danger" id="confirm-delete-message-btn" data-t="delete_button">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- ======================= MODAL: person attendance calendar (admin) ======================= -->
 <div id="modal-person-calendar" class="modal-backdrop hidden">
   <div class="modal" style="text-align:left; max-width:460px;">
@@ -305,9 +338,9 @@
 
 <div id="toast-container"></div>
 
-<script src="assets/js/i18n.js?v=17"></script>
-<script src="assets/js/theme.js?v=17"></script>
-<script src="assets/js/api.js?v=17"></script>
-<script src="assets/js/app.js?v=17"></script>
+<script src="assets/js/i18n.js?v=18"></script>
+<script src="assets/js/theme.js?v=18"></script>
+<script src="assets/js/api.js?v=18"></script>
+<script src="assets/js/app.js?v=18"></script>
 </body>
 </html>

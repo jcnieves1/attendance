@@ -204,4 +204,30 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     KEY idx_login_attempts_email_time (email, created_at)
 ) ENGINE=InnoDB;
 
+-- ---------------------------------------------------------------------------
+-- Team messages: the Admin area's "Messages board" — rich-text announcements
+-- a manager/admin posts for their team, shown above "My favorite office
+-- days" on everyone's "This week" tab (editable/removable/reorderable from
+-- both places by a manager; read-only for employees). Content is passed
+-- through sanitize_rich_text() (api/helpers.php) — a whitelist-based
+-- sanitizer built on DOMDocument — before it's ever written here, so no
+-- <script>, event-handler attribute, or javascript:/data: link can make it
+-- into the database. sort_order is a plain 0-based position, rewritten
+-- wholesale on every drag-and-drop reorder.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS team_messages (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    team_id     INT UNSIGNED NOT NULL,
+    content     TEXT NOT NULL COMMENT 'sanitized rich text — safe tag whitelist only',
+    sort_order  INT NOT NULL DEFAULT 0,
+    created_by  INT UNSIGNED NOT NULL,
+    updated_by  INT UNSIGNED NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_team_messages_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    CONSTRAINT fk_team_messages_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_team_messages_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+    KEY idx_team_messages_team_order (team_id, sort_order)
+) ENGINE=InnoDB;
+
 SET FOREIGN_KEY_CHECKS = 1;

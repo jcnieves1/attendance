@@ -169,6 +169,7 @@ async function boot() {
   wireAuthForms();
   wireForgotPassword();
   wireStaticButtons();
+  wireMessageEditor();
   loadAuthCaptcha("login");
 
   try {
@@ -639,6 +640,26 @@ function wireStaticButtons() {
       showToast(err.message || t("error_generic"));
     }
   });
+
+  // Delete a messages board message — confirmed first, same pattern as
+  // removing a teammate.
+  document.getElementById("cancel-delete-message-btn").addEventListener("click", () => {
+    pendingDeleteMessage = null;
+    closeModal("modal-confirm-delete-message");
+  });
+  document.getElementById("confirm-delete-message-btn").addEventListener("click", async () => {
+    if (!pendingDeleteMessage) return;
+    const { id, onChange } = pendingDeleteMessage;
+    pendingDeleteMessage = null;
+    closeModal("modal-confirm-delete-message");
+    try {
+      await apiPost("team_messages/delete.php", { message_id: id });
+      showToast(t("message_deleted_toast"));
+      if (onChange) onChange();
+    } catch (err) {
+      showToast(err.message || t("error_generic"));
+    }
+  });
 }
 
 /* -------------------------------- sidebar ---------------------------------- */
@@ -942,6 +963,7 @@ async function renderWeekTab() {
   const favoriteDows = new Set(favorites.days);
   const suggestedDows = new Set(APP.currentTeamDetail.suggested_days);
   const mascotMsg = pickMascotMessage();
+  const isManager = APP.currentTeamDetail.my_role === "owner" || APP.currentTeamDetail.my_role === "admin";
 
   container.innerHTML = `
     <div class="mascot-banner">
@@ -952,6 +974,11 @@ async function renderWeekTab() {
       <h2 data-t="this_week">This week</h2>
       <div style="font-size:13px; color:var(--text-muted);" data-t="weekly_pattern_note"></div>
       <div class="week-grid" id="week-grid"></div>
+    </div>
+    <div class="card hidden" id="week-messages-card">
+      <h3 data-t="messages_board_title">Messages board</h3>
+      <div id="week-messages-board"></div>
+      ${isManager ? `<button class="btn small" id="week-add-message-btn" style="margin-top:12px;" data-t="add_message_button">+ Add message</button>` : ""}
     </div>
     <div class="card">
       <h3 data-t="favorite_days_title">My favorite office days</h3>
@@ -1029,6 +1056,194 @@ async function renderWeekTab() {
     } catch (err) {
       e.target.checked = !wantsDefault; // revert the checkbox on failure
       showToast(err.message || t("error_generic"));
+    }
+  });
+
+  // --- messages board (read-only for employees, fully editable for managers) ---
+  const weekAddMessageBtn = document.getElementById("week-add-message-btn");
+  if (weekAddMessageBtn) {
+    weekAddMessageBtn.addEventListener("click", () => {
+      openMessageEditor(teamId, null, () => loadMessagesBoard("week-messages-board", teamId, isManager, "week-messages-card"));
+    });
+  }
+  loadMessagesBoard("week-messages-board", teamId, isManager, "week-messages-card");
+}
+
+/* ------------------ messages board (shared: This week tab + Admin area) ----------------- */
+
+/**
+ * Renders one team's "Messages board" rich-text posts into containerId, in
+ * display order. When editable, each message gets Edit/Delete controls plus
+ * drag-and-drop reordering, and the whole thing is shown even when empty (so
+ * a manager can see the "no messages yet" placeholder and the Add button);
+ * for a read-only viewer, an empty board hides the whole card (cardId) so
+ * employees don't see a pointless empty section.
+ */
+async function loadMessagesBoard(containerId, teamId, editable, cardId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const card = cardId ? document.getElementById(cardId) : null;
+
+  let messages = [];
+  try {
+    const res = await apiGet("team_messages/list.php", { team_id: teamId });
+    messages = res.messages;
+  } catch (err) {
+    if (card && !editable) return; // fail quietly for employees — non-critical
+    container.innerHTML = `<p class="error-msg">${err.message || t("error_generic")}</p>`;
+    if (card) card.classList.remove("hidden");
+    return;
+  }
+
+  if (!messages.length && !editable) {
+    if (card) card.classList.add("hidden");
+    container.innerHTML = "";
+    return;
+  }
+  if (card) card.classList.remove("hidden");
+
+  container.innerHTML = buildMessagesBoardHtml(messages, editable);
+  if (editable) {
+    const onChange = () => loadMessagesBoard(containerId, teamId, editable, cardId);
+    wireMessageBoardActions(container, teamId, onChange);
+    wireMessageDragDrop(container, teamId, onChange);
+  }
+}
+
+function buildMessagesBoardHtml(messages, editable) {
+  if (!messages.length) {
+    return editable ? `<p style="color:var(--text-muted); font-size:13px;">${t("no_messages_yet")}</p>` : "";
+  }
+  return messages.map((m) => `
+    <div class="message-board-item" data-id="${m.id}" ${editable ? 'draggable="true"' : ""}>
+      ${editable ? '<span class="message-drag-handle" title="Drag to reorder">&#10495;</span>' : ""}
+      <div class="message-board-content">${m.content}</div>
+      ${editable ? `
+        <div class="message-board-actions">
+          <button class="btn ghost small" data-action="edit-message" data-id="${m.id}">${t("edit_button")}</button>
+          <button class="btn ghost small" data-action="delete-message" data-id="${m.id}">${t("delete_button")}</button>
+        </div>
+      ` : ""}
+    </div>
+  `).join("");
+}
+
+function wireMessageBoardActions(container, teamId, onChange) {
+  container.querySelectorAll('button[data-action="edit-message"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = parseInt(btn.dataset.id, 10);
+      const contentHtml = btn.closest(".message-board-item").querySelector(".message-board-content").innerHTML;
+      openMessageEditor(teamId, { id, content: contentHtml }, onChange);
+    });
+  });
+  container.querySelectorAll('button[data-action="delete-message"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      pendingDeleteMessage = { id: parseInt(btn.dataset.id, 10), onChange };
+      openModal("modal-confirm-delete-message");
+    });
+  });
+}
+
+/**
+ * Native HTML5 drag-and-drop reordering — no library needed. Dragging a row
+ * live-reorders the DOM (insertBefore based on cursor position relative to
+ * the row under it); on drop, the resulting DOM order is sent to the server
+ * as the new sort_order for every message in one call. If that call fails,
+ * onChange re-renders from the server's actual (unchanged) order.
+ */
+function wireMessageDragDrop(container, teamId, onChange) {
+  let draggedEl = null;
+  container.querySelectorAll(".message-board-item").forEach((item) => {
+    item.addEventListener("dragstart", () => {
+      draggedEl = item;
+      item.classList.add("dragging");
+    });
+    item.addEventListener("dragend", async () => {
+      item.classList.remove("dragging");
+      draggedEl = null;
+      const orderedIds = Array.from(container.querySelectorAll(".message-board-item")).map((el) => parseInt(el.dataset.id, 10));
+      try {
+        await apiPost("team_messages/reorder.php", { team_id: teamId, ordered_ids: orderedIds });
+      } catch (err) {
+        showToast(err.message || t("error_generic"));
+        onChange();
+      }
+    });
+    item.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!draggedEl || draggedEl === item) return;
+      const rect = item.getBoundingClientRect();
+      const after = (e.clientY - rect.top) > rect.height / 2;
+      container.insertBefore(draggedEl, after ? item.nextSibling : item);
+    });
+  });
+}
+
+/* Pending state for the shared add/edit message modal + delete confirm. */
+let messageEditorTarget = null;
+let pendingDeleteMessage = null;
+
+/** Opens the add/edit message modal. Pass an existing {id, content} to edit, or null to create a new message. */
+function openMessageEditor(teamId, message, onSaved) {
+  messageEditorTarget = { teamId, messageId: message ? message.id : null, onSaved };
+  document.getElementById("message-editor-title").textContent = t(message ? "edit_message_title" : "add_message_title");
+  document.getElementById("message-editor-content").innerHTML = message ? message.content : "";
+  document.getElementById("message-editor-error").textContent = "";
+  openModal("modal-message-editor");
+  setTimeout(() => {
+    const el = document.getElementById("message-editor-content");
+    if (el) el.focus();
+  }, 50);
+}
+
+function wireMessageEditor() {
+  const contentEl = document.getElementById("message-editor-content");
+
+  document.querySelectorAll("#modal-message-editor .richtext-toolbar button[data-cmd]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      contentEl.focus();
+      document.execCommand(btn.dataset.cmd, false, null);
+    });
+  });
+
+  document.getElementById("richtext-link-btn").addEventListener("click", () => {
+    const url = (prompt(t("richtext_link_prompt")) || "").trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) {
+      showToast(t("richtext_link_invalid"));
+      return;
+    }
+    contentEl.focus();
+    document.execCommand("createLink", false, url);
+  });
+
+  document.getElementById("cancel-message-editor").addEventListener("click", () => {
+    messageEditorTarget = null;
+    closeModal("modal-message-editor");
+  });
+
+  document.getElementById("save-message-editor").addEventListener("click", async () => {
+    if (!messageEditorTarget) return;
+    const errorEl = document.getElementById("message-editor-error");
+    errorEl.textContent = "";
+    const html = contentEl.innerHTML.trim();
+    if (!html || html === "<br>") {
+      errorEl.textContent = t("message_empty_error");
+      return;
+    }
+    try {
+      if (messageEditorTarget.messageId) {
+        await apiPost("team_messages/update.php", { message_id: messageEditorTarget.messageId, content: html });
+      } else {
+        await apiPost("team_messages/create.php", { team_id: messageEditorTarget.teamId, content: html });
+      }
+      const onSaved = messageEditorTarget.onSaved;
+      messageEditorTarget = null;
+      closeModal("modal-message-editor");
+      showToast(t("saved"));
+      if (onSaved) onSaved();
+    } catch (err) {
+      errorEl.textContent = err.message || t("error_generic");
     }
   });
 }
@@ -1478,6 +1693,13 @@ async function renderAdminTab() {
     </div>
 
     <div class="card">
+      <h2 data-t="messages_board_title">Messages board</h2>
+      <p style="font-size:13px; color:var(--text-muted);" data-t="messages_board_admin_hint"></p>
+      <div id="admin-messages-board"></div>
+      <button class="btn small" id="add-message-btn" style="margin-top:12px;" data-t="add_message_button">+ Add message</button>
+    </div>
+
+    <div class="card">
       <h2 data-t="my_teams">Members</h2>
       <div id="members-list"></div>
     </div>
@@ -1679,6 +1901,12 @@ async function renderAdminTab() {
     }
   }
   loadJoinRequests();
+
+  // --- messages board ---
+  document.getElementById("add-message-btn").addEventListener("click", () => {
+    openMessageEditor(teamId, null, () => loadMessagesBoard("admin-messages-board", teamId, true));
+  });
+  loadMessagesBoard("admin-messages-board", teamId, true);
 
   // --- invite: user search ---
   const searchInput = document.getElementById("invite-user-search");

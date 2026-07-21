@@ -51,9 +51,10 @@ itself, with no email dependency anywhere.
 
 ## Requirements
 
-- PHP 8.0+ with the `pdo_mysql` and `zip` extensions (both enabled by default
-  in most PHP installs). `zip` is only needed for the Admin area's Excel
-  export — the rest of the app works fine without it.
+- PHP 8.0+ with the `pdo_mysql`, `zip`, and `dom` extensions (all enabled by
+  default in most PHP installs). `zip` is only needed for the Admin area's
+  Excel export, and `dom` only for sanitizing Messages board rich text — the
+  rest of the app works fine without either.
 - MySQL 8+ or MariaDB 10.4+.
 
 No outgoing mail server, API key, or Composer dependency is needed — OfficePal
@@ -155,6 +156,18 @@ challenge and submitting the form. The same CAPTCHA (not the rate limit) also
 guards the **Create account** form, as a lightweight check against scripted
 bulk sign-ups.
 
+If you're upgrading further to add the Admin area's "Messages board", also
+run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v10_team_messages.sql
+```
+
+It adds a `team_messages` table. Message content is always passed through
+`sanitize_rich_text()` (a whitelist-based sanitizer built on PHP's
+`DOMDocument` — see api/helpers.php) before being written here, stripping
+anything beyond a small safe set of formatting tags.
+
 ## 2. Configure the app
 
 Edit `api/config.php` (or set the equivalent environment variables — handy if
@@ -249,6 +262,12 @@ your machine's local IP, to try the mobile layout).
     question. Five failed attempts for the same email within 15 minutes
     temporarily blocks further tries, as a basic guard against scripted
     brute-force login attempts.
+21. In **Admin area** → **Messages board**, click **+ Add message**, write
+    something with the bold/italic/underline/list/link toolbar, and save —
+    it appears above **My favorite office days** on everyone's **This week**
+    tab. Drag messages by the handle to reorder them; employees see the
+    board read-only, while owners/admins can edit, delete, and reorder from
+    either the Admin area or right there on **This week**.
 
 ## Project structure
 
@@ -273,6 +292,7 @@ OfficePal/
     migrate_v7_auto_accept.sql        Upgrade path: auto-accept join requests
     migrate_v8_default_team.sql       Upgrade path: personal default team
     migrate_v9_login_attempts.sql     Upgrade path: login CAPTCHA + rate limit
+    migrate_v10_team_messages.sql     Upgrade path: Admin area messages board
 ```
 
 ## Notes on the design

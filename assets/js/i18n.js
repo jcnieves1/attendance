@@ -126,6 +126,22 @@ const DICT = {
     default_team_set_toast: "This is now your default team.",
     default_team_cleared_toast: "Default team cleared.",
 
+    // Messages board (Admin area + This week tab)
+    messages_board_title: "Messages board",
+    messages_board_admin_hint: "Post rich-text announcements for your team — shown above \"My favorite office days\" on This week. Drag messages to reorder them.",
+    add_message_title: "Add a message",
+    edit_message_title: "Edit message",
+    add_message_button: "+ Add message",
+    edit_button: "Edit",
+    delete_button: "Delete",
+    no_messages_yet: "No messages yet.",
+    confirm_delete_message_title: "Delete this message?",
+    confirm_delete_message_text: "This will remove the message from the board for everyone. This action cannot be undone.",
+    message_deleted_toast: "Message deleted.",
+    message_empty_error: "Please write a message before saving.",
+    richtext_link_prompt: "Enter a URL (must start with http://, https://, or mailto:)",
+    richtext_link_invalid: "That doesn't look like a valid link. Please use http://, https://, or mailto:.",
+
     // Weekday / calendar tracking mode
     tracking_mode_title: "Days tracked",
     tracking_mode_hint: "Choose whether this team tracks Mon-Fri only or the full week — this hides the days you don't need everywhere in the app.",
@@ -374,6 +390,22 @@ const DICT = {
     default_team_checkbox_label: "Hacer que este sea mi equipo predeterminado al iniciar sesión",
     default_team_set_toast: "Este ya es tu equipo predeterminado.",
     default_team_cleared_toast: "Equipo predeterminado eliminado.",
+
+    // Tablón de mensajes (Área de administración + pestaña Esta semana)
+    messages_board_title: "Tablón de mensajes",
+    messages_board_admin_hint: "Publica anuncios con formato para tu equipo — se muestran arriba de \"Mis días favoritos de oficina\" en Esta semana. Arrastra los mensajes para reordenarlos.",
+    add_message_title: "Agregar un mensaje",
+    edit_message_title: "Editar mensaje",
+    add_message_button: "+ Agregar mensaje",
+    edit_button: "Editar",
+    delete_button: "Eliminar",
+    no_messages_yet: "Todavía no hay mensajes.",
+    confirm_delete_message_title: "¿Eliminar este mensaje?",
+    confirm_delete_message_text: "Esto eliminará el mensaje del tablón para todos. Esta acción no se puede deshacer.",
+    message_deleted_toast: "Mensaje eliminado.",
+    message_empty_error: "Escribe un mensaje antes de guardar.",
+    richtext_link_prompt: "Ingresa una URL (debe comenzar con http://, https:// o mailto:)",
+    richtext_link_invalid: "Ese enlace no parece válido. Usa http://, https:// o mailto:.",
 
     tracking_mode_title: "Días registrados",
     tracking_mode_hint: "Elige si este equipo registra solo de lunes a viernes o la semana completa — esto oculta los días que no necesitas en toda la app.",

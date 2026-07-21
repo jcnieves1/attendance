@@ -201,6 +201,119 @@ function generate_captcha_challenge(): array
 }
 
 /**
+ * Whitelist-based HTML sanitizer for the Admin area's "Messages board" rich
+ * text. Built on PHP's DOMDocument rather than a raw regex/strip_tags pass —
+ * regex-based HTML sanitization is notoriously easy to bypass (nested tags,
+ * malformed markup, odd attribute encoding, etc). Anything not on the
+ * whitelist is unwrapped (the tag itself is dropped, but its still-unsanitized
+ * children are kept and recursively sanitized in turn) except <script> and
+ * <style>, whose contents are dropped entirely rather than unwrapped. The
+ * only attribute kept anywhere is href on <a>, and only when it's an
+ * http(s)/mailto link — never javascript:, data:, or anything else — and
+ * such links are forced to target="_blank" rel="noopener noreferrer".
+ */
+function sanitize_rich_text(string $html): string
+{
+    $allowedTags = ['b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'br', 'p', 'a', 'span', 'div'];
+
+    $dom = new DOMDocument();
+    libxml_use_internal_errors(true);
+    // The xml encoding declaration is a standard trick to make DOMDocument
+    // treat the input as UTF-8 (its default HTML parsing assumes
+    // ISO-8859-1, which mangles accented characters); NOIMPLIED/NODEFDTD
+    // stop it from adding a surrounding <html><body> and a doctype.
+    $dom->loadHTML(
+        '<?xml encoding="utf-8" ?><div>' . $html . '</div>',
+        LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOERROR | LIBXML_NOWARNING
+    );
+    libxml_clear_errors();
+
+    $container = $dom->getElementsByTagName('div')->item(0);
+    if (!$container) {
+        return '';
+    }
+
+    sanitize_dom_node($container, $allowedTags);
+
+    $result = '';
+    foreach ($container->childNodes as $child) {
+        $result .= $dom->saveHTML($child);
+    }
+    return trim($result);
+}
+
+/**
+ * Recursive worker for sanitize_rich_text(). Walks $node's children as a
+ * manual linked list (firstChild/nextSibling) rather than a pre-snapshotted
+ * array — when a disallowed tag is unwrapped, its own children get spliced
+ * into $node in its place, and they must still be visited by this same walk
+ * (a naive one-pass-over-a-snapshot approach would skip them, letting e.g. a
+ * <script> nested inside a disallowed wrapper tag slip through unsanitized).
+ */
+function sanitize_dom_node(DOMNode $node, array $allowedTags): void
+{
+    $child = $node->firstChild;
+    while ($child !== null) {
+        $next = $child->nextSibling; // grab before any mutation invalidates it
+
+        if ($child->nodeType === XML_TEXT_NODE) {
+            $child = $next;
+            continue;
+        }
+        if ($child->nodeType !== XML_ELEMENT_NODE) {
+            // Comments, processing instructions, etc.
+            $node->removeChild($child);
+            $child = $next;
+            continue;
+        }
+
+        $tag = strtolower($child->nodeName);
+
+        if (!in_array($tag, $allowedTags, true)) {
+            if (in_array($tag, ['script', 'style'], true)) {
+                $node->removeChild($child);
+                $child = $next;
+                continue;
+            }
+            // Unwrap: splice this tag's children into its place, then resume
+            // the walk from the first of them — they haven't been sanitized
+            // yet themselves.
+            $firstMoved = $child->firstChild;
+            while ($child->firstChild) {
+                $node->insertBefore($child->firstChild, $child);
+            }
+            $node->removeChild($child);
+            $child = $firstMoved ?: $next;
+            continue;
+        }
+
+        if ($child->hasAttributes()) {
+            $attrNames = [];
+            foreach ($child->attributes as $attr) {
+                $attrNames[] = $attr->name;
+            }
+            foreach ($attrNames as $attrName) {
+                if ($tag === 'a' && strtolower($attrName) === 'href') {
+                    $href = trim($child->getAttribute('href'));
+                    if (!preg_match('/^(https?:|mailto:)/i', $href)) {
+                        $child->removeAttribute('href');
+                    }
+                    continue;
+                }
+                $child->removeAttribute($attrName);
+            }
+            if ($tag === 'a' && $child->getAttribute('href') !== '') {
+                $child->setAttribute('target', '_blank');
+                $child->setAttribute('rel', 'noopener noreferrer');
+            }
+        }
+
+        sanitize_dom_node($child, $allowedTags);
+        $child = $next;
+    }
+}
+
+/**
  * Checks a submitted captcha answer against the one generate_captcha_challenge()
  * stashed in the session, then always clears it — right or wrong — so a
  * single challenge can never be replayed across multiple login attempts.
