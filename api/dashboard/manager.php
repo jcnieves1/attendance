@@ -27,7 +27,7 @@ if ($month) {
 }
 
 $stmt = db()->prepare(
-    'SELECT a.user_id, u.full_name, a.attendance_date
+    'SELECT a.user_id, u.full_name, u.avatar_filename, a.attendance_date
      FROM attendance a JOIN users u ON u.id = a.user_id
      WHERE a.team_id = ? AND a.attendance_date BETWEEN ? AND ?
      ORDER BY a.attendance_date'
