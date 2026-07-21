@@ -1,6 +1,6 @@
 /* OfficePal theme switcher — 3 selectable color schemes. */
 
-const THEMES = ["sunrise", "forest", "midnight"];
+const THEMES = ["sunrise", "forest", "midnight", "peach", "cloud"];
 
 function getTheme() {
   return localStorage.getItem("officepal_theme") || "sunrise";

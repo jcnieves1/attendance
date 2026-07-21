@@ -30,8 +30,8 @@ itself, with no email dependency anywhere.
   heatmap, visible to every member (not just managers).
 - A dedicated Admin area (owner/admin only) for invitations, roles, tracking
   mode, suggested days, and the manager's yearly dashboard.
-- English/Spanish language toggle and 3 selectable color themes (Sunrise,
-  Forest, Midnight), both saved per-user.
+- English/Spanish language toggle and 5 selectable color themes (Sunrise,
+  Forest, Midnight, Peach, Cloud), both saved per-user.
 - Fully responsive layout: a slide-in sidebar drawer with a hamburger toggle
   on small screens, a stacked topbar, and grids/modals that reflow for phones.
 - Both dashboards (personal and Admin area) can be filtered by year, or
@@ -276,6 +276,11 @@ your machine's local IP, to try the mobile layout).
     no backend involved. Click any **Get started free** or **Log in** button
     on the page (nav bar, hero, mid-page, or bottom) and confirm it switches
     the card to the right tab and smooth-scrolls it into view.
+23. Click through all 5 theme dots (topbar or landing nav): Sunrise, Forest,
+    and Midnight are the original three, plus two new softer options —
+    **Peach** (a pastel warm apricot/rose palette) and **Cloud** (a mostly
+    white, low-contrast palette with a whisper of dusty blue). The choice is
+    saved to your account like the other three.
 
 ## Project structure
 
@@ -283,7 +288,7 @@ your machine's local IP, to try the mobile layout).
 OfficePal/
   index.html              Main app (login/register + the whole SPA)
   assets/
-    css/styles.css         All styling, the 3 color themes, and mobile layout
+    css/styles.css         All styling, the 5 color themes, and mobile layout
     js/                     i18n.js, theme.js, api.js, app.js
     img/                    Pal the frog mascot (SVG, 3 poses)
   api/                     PHP backend (session-based auth, JSON responses)

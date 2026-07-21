@@ -67,6 +67,52 @@
   --heat-4: #9d7bff;
 }
 
+/* Soft warm — a gentler, pastel take on Sunrise: apricot/rose instead of
+   bright orange, for a cozier, lower-contrast feel. */
+[data-theme="peach"] {
+  --bg: #fdf6f0;
+  --surface: #ffffff;
+  --surface-alt: #faeee2;
+  --text: #4a3f3a;
+  --text-muted: #9c8b82;
+  --primary: #e8a87c;
+  --primary-dark: #d68f5f;
+  --accent: #d98c8c;
+  --success: #7fb885;
+  --warning: #e8c07d;
+  --danger: #d98080;
+  --border: #f2e2d5;
+  --shadow: 0 8px 24px rgba(216, 143, 95, 0.12);
+  --heat-0: #f5ece3;
+  --heat-1: #f0d4b8;
+  --heat-2: #e8b990;
+  --heat-3: #e8a87c;
+  --heat-4: #d68f5f;
+}
+
+/* Soft white — airy and mostly neutral, with just a whisper of dusty blue
+   for accents. The lowest-contrast, calmest option of the five. */
+[data-theme="cloud"] {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-alt: #f2f3f5;
+  --text: #33363d;
+  --text-muted: #8a8f98;
+  --primary: #9db4c0;
+  --primary-dark: #7f9aa8;
+  --accent: #b8a9c9;
+  --success: #8fc9a8;
+  --warning: #e3c98f;
+  --danger: #d99a9a;
+  --border: #e8e9ec;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --heat-0: #eef0f2;
+  --heat-1: #dbe4e8;
+  --heat-2: #c0d2da;
+  --heat-3: #9db4c0;
+  --heat-4: #7f9aa8;
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -133,6 +179,8 @@ a { color: var(--accent); }
 .theme-dot.sunrise { background: linear-gradient(135deg, #ff7a45, #6c5ce7); }
 .theme-dot.forest { background: linear-gradient(135deg, #2f9e6f, #1f8a8c); }
 .theme-dot.midnight { background: linear-gradient(135deg, #9d7bff, #14131f); }
+.theme-dot.peach { background: linear-gradient(135deg, #e8a87c, #d98c8c); }
+.theme-dot.cloud { background: linear-gradient(135deg, #ffffff, #9db4c0); box-shadow: inset 0 0 0 1px #d8dade; }
 
 .current-user-name { font-weight: 600; font-size: 14px; margin-left: 6px; white-space: nowrap; }
 
