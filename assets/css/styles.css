@@ -430,16 +430,27 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 
 /* One heat-colored day cell: same color scale as the legend swatches, with
    the day number in a small translucent badge so it stays legible no matter
-   how dark or light the underlying heat color is (across all 3 themes). */
+   how dark or light the underlying heat color is (across all 3 themes).
+   Every cell is clickable — it opens a popup listing who attended that day
+   (see wireHeatmapDayClicks() / openDayAttendanceModal() in app.js). */
 .heatcal-cell[data-level="0"] { background: var(--heat-0); }
 .heatcal-cell[data-level="1"] { background: var(--heat-1); }
 .heatcal-cell[data-level="2"] { background: var(--heat-2); }
 .heatcal-cell[data-level="3"] { background: var(--heat-3); }
 .heatcal-cell[data-level="4"] { background: var(--heat-4); }
+.heatcal-cell { cursor: pointer; transition: transform 0.08s ease, box-shadow 0.15s ease; }
+.heatcal-cell:hover { box-shadow: inset 0 0 0 2px var(--primary); }
+.heatcal-cell:active { transform: scale(0.94); }
 .heatcal-cell .cal-day-num {
   position: static; background: rgba(255, 255, 255, 0.55); color: #2d2a35;
   padding: 1px 5px; border-radius: 5px; font-weight: 700;
 }
+
+/* Numbered "who attended this day" list in the day-attendance popup. */
+.day-attendance-list { list-style: decimal; margin: 0; padding-left: 24px; }
+.day-attendance-list li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.day-attendance-list li:last-child { border-bottom: none; }
+.day-attendance-list li span { font-weight: 600; }
 
 /* Whole year in view: one small calendar per month instead of one big one. */
 .heatcal-year-grid {

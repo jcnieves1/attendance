@@ -691,6 +691,9 @@ function wireStaticButtons() {
   // Person attendance calendar (admin dashboard, "Per person" breakdown).
   document.getElementById("close-person-calendar-modal").addEventListener("click", () => closeModal("modal-person-calendar"));
 
+  // Day attendance popup (click a heatmap day cell on either dashboard).
+  document.getElementById("close-day-attendance-modal").addEventListener("click", () => closeModal("modal-day-attendance"));
+
   // Attendance confirm dialog + bigger "it worked" result popup.
   document.getElementById("cancel-attendance-btn").addEventListener("click", () => {
     pendingAttendanceAction = null;
@@ -1656,6 +1659,8 @@ function renderTeamDashboard(rows, year, month) {
       openPersonCalendarModal(parseInt(row.dataset.userId, 10), row.dataset.userName, row.dataset.userAvatar, year, month, rows);
     });
   });
+
+  wireHeatmapDayClicks(body, rows);
 }
 
 /**
@@ -1697,7 +1702,7 @@ function buildHeatmapCalendarHtml(rows, year, month, trackWeekends) {
     if (isWeekend && !trackWeekends) classes.push("weekend-muted");
 
     cellsHtml += `
-      <div class="${classes.join(" ")}" data-level="${level}" title="${escapeHtml(tooltip)}">
+      <div class="${classes.join(" ")}" data-level="${level}" data-date="${dateStr}" title="${escapeHtml(tooltip)}">
         <div class="cal-day-num">${day}</div>
       </div>
     `;
@@ -2404,6 +2409,45 @@ function renderAdminDashboard(data, year, month, selectedMemberIds) {
       openPersonCalendarModal(parseInt(row.dataset.userId, 10), row.dataset.userName, row.dataset.userAvatar, year, month, data.attendance);
     });
   });
+
+  wireHeatmapDayClicks(body, attendance);
+}
+
+/**
+ * Shared by the personal dashboard's "Teammates' attendance" heatmap and the
+ * admin "Attendance dashboard" heatmap: clicking any day cell (in either the
+ * single-month or whole-year view) opens a popup listing everyone who
+ * checked in that day. Reuses whichever attendance rows the caller already
+ * has loaded rather than firing a new request — every day cell carries its
+ * own date via data-date (see buildHeatmapCalendarHtml).
+ */
+function wireHeatmapDayClicks(container, rows) {
+  container.querySelectorAll(".heatcal-cell[data-date]").forEach((cell) => {
+    cell.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const dateStr = cell.dataset.date;
+      const attendees = rows
+        .filter((r) => r.attendance_date === dateStr)
+        .map((r) => ({ name: r.full_name, avatar: r.avatar_filename }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      openDayAttendanceModal(dateStr, attendees);
+    });
+  });
+}
+
+/** Shows the numbered "who was in" list for a single day, in the popup wired by wireHeatmapDayClicks(). */
+function openDayAttendanceModal(dateStr, attendees) {
+  document.getElementById("day-attendance-date").textContent = formatDateHuman(dateStr);
+  const listEl = document.getElementById("day-attendance-list");
+  listEl.innerHTML = attendees.length
+    ? `<ol class="day-attendance-list">${attendees.map((a) => `
+        <li>
+          ${avatarImgHtml(a.avatar)}
+          <span>${escapeHtml(a.name)}</span>
+        </li>
+      `).join("")}</ol>`
+    : `<p style="color:var(--text-muted);">${t("no_attendance_that_day")}</p>`;
+  openModal("modal-day-attendance");
 }
 
 /**

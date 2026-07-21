@@ -307,6 +307,13 @@ your machine's local IP, to try the mobile layout).
     photo shows up next to your name in all three (teammates without a photo
     just show their name, same as before). Click **Remove photo** and
     confirm it disappears everywhere and the file is gone from the server.
+25. On **My Attendance**, click any colored day in the **Teammates'
+    attendance** heatmap (single-month or whole-year view) — a popup opens
+    with a numbered list of everyone who checked in that day, photo and all,
+    plus the date. Click a day with nobody checked in and confirm it says so
+    instead of showing an empty list. Do the same from **Admin area** →
+    **Attendance dashboard**'s heatmap — it works identically there, and
+    respects whichever teammates are currently selected in the member filter.
 
 ## Project structure
 
