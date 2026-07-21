@@ -55,6 +55,11 @@ itself, with no email dependency anywhere.
   every active team member — OfficePal never sends anything itself, it just
   hands off to whatever mail app is configured locally, exactly like clicking
   any other mailto link on the web.
+- If the PHP session expires (or is otherwise invalidated) while someone is
+  still using the app, the very next action that hits the server drops them
+  straight back to the landing page's login tab with a toast explaining why,
+  instead of leaving them stuck on a page where every further click would
+  just keep failing the same way.
 - Pal the frog 🐸 — a friendly mascot who carries a little notebook and
   pencil everywhere, cheerfully "taking notes" on who's checked in.
 
@@ -337,6 +342,11 @@ your machine's local IP, to try the mobile layout).
     write and send from there directly (OfficePal itself never touches the
     message). Switch to an employee-only account and confirm the sidebar
     button stays hidden — sending to the whole team is a manager action.
+28. To see the session-expiry redirect without waiting out PHP's session
+    timeout, log in, open devtools → Application/Storage → cookies, delete
+    the `PHPSESSID` cookie for this site, then click anything that hits the
+    server (e.g. toggle a day on **This week**). You're dropped straight back
+    to the landing page's login tab with a "Please log in to continue" toast.
 
 ## Project structure
 

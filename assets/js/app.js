@@ -171,6 +171,7 @@ async function boot() {
   wireStaticButtons();
   wireMessageEditor();
   wireLandingCtas();
+  document.addEventListener("officepal:session-expired", handleSessionExpired);
   loadAuthCaptcha("login");
 
   try {
@@ -184,6 +185,37 @@ async function boot() {
   } catch (e) {
     showAuthScreen();
   }
+}
+
+// Set once handleSessionExpired() has already dropped the person back to the
+// landing page, so a burst of several in-flight requests all failing at once
+// (e.g. a dashboard's Promise.all) only triggers the redirect/toast once.
+// Cleared again on the next successful login/register (see enterApp()).
+let sessionExpiredHandled = false;
+
+/**
+ * Fired on the "officepal:session-expired" event (dispatched by
+ * parseApiResponse() in api.js whenever any request comes back
+ * "not_authenticated") — the PHP session expired or was otherwise
+ * invalidated server-side while the app still thought the person was logged
+ * in. Drops back to the landing page's login tab with a fresh CAPTCHA
+ * rather than leaving them stuck on a page where every further action would
+ * just keep failing the same way.
+ */
+function handleSessionExpired() {
+  if (sessionExpiredHandled) return;
+  sessionExpiredHandled = true;
+
+  APP.user = null;
+  APP.teams = [];
+  APP.invitations = [];
+  APP.notifications = [];
+  APP.currentTeamId = null;
+  APP.currentTeamDetail = null;
+
+  showAuthScreen();
+  switchAuthTab("login");
+  showToast(t("not_authenticated"));
 }
 
 function wireThemeDots() {
@@ -248,6 +280,7 @@ function showAuthScreen() {
 }
 
 function enterApp() {
+  sessionExpiredHandled = false; // a fresh, valid session — future expiries should redirect again
   document.getElementById("auth-screen").classList.add("hidden");
   document.getElementById("app-shell").classList.remove("hidden");
   document.getElementById("current-user-name").textContent = APP.user.full_name;

@@ -87,6 +87,18 @@ async function parseApiResponse(res) {
     throw { ok: false, error: "bad_response", message: "Unexpected server response." };
   }
   if (!data.ok) {
+    // The PHP session expired (or was otherwise invalidated) server-side
+    // while the app still thought the user was logged in — every endpoint
+    // that requires auth reports this the same way (see require_auth() in
+    // api/helpers.php). Rather than every single call site having to check
+    // for this, fire one event here; app.js listens for it once and drops
+    // the person back to the landing page's login tab. Kept as a DOM event
+    // (same convention as i18n.js's "officepal:lang-changed") rather than a
+    // direct function call so this file stays a plain fetch helper with no
+    // knowledge of app.js's state or screens.
+    if (data.error === "not_authenticated") {
+      document.dispatchEvent(new CustomEvent("officepal:session-expired"));
+    }
     throw data;
   }
   return data;
