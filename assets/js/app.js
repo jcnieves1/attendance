@@ -505,6 +505,13 @@ function wireStaticButtons() {
     location.reload();
   });
 
+  // "Send email to team" (sidebar) — reads whichever team is currently
+  // selected at click time, so a single listener is enough for however many
+  // teams the person switches between.
+  document.getElementById("email-team-btn").addEventListener("click", () => {
+    openMailtoForTeam(APP.currentTeamDetail);
+  });
+
   document.getElementById("new-team-btn").addEventListener("click", () => openModal("modal-create-team"));
   document.getElementById("cancel-create-team").addEventListener("click", () => closeModal("modal-create-team"));
   document.getElementById("confirm-create-team").addEventListener("click", async () => {
@@ -1028,6 +1035,14 @@ async function renderMain() {
   APP.currentTeamDetail = detail;
 
   const isManager = detail.my_role === "owner" || detail.my_role === "admin";
+
+  // The sidebar's "Send email to team" button acts on whichever team is
+  // currently open, so its visibility is refreshed here — right after that
+  // team's role/roster has actually loaded — rather than in renderSidebar(),
+  // which runs before this fetch and would still be looking at the
+  // previously-selected team.
+  const sidebarEmailBtn = document.getElementById("email-team-btn");
+  if (sidebarEmailBtn) sidebarEmailBtn.classList.toggle("hidden", !isManager);
 
   main.innerHTML = `
     <div class="card-header">
@@ -1829,7 +1844,10 @@ async function renderAdminTab() {
     </div>
 
     <div class="card">
-      <h2 data-t="my_teams">Members</h2>
+      <div class="card-header">
+        <h2 data-t="team_members_title">Members</h2>
+        <button class="btn small secondary" id="email-team-btn-admin" data-t="email_team_button">Send email to team</button>
+      </div>
       <div id="members-list"></div>
     </div>
 
@@ -2030,6 +2048,11 @@ async function renderAdminTab() {
     }
   }
   loadJoinRequests();
+
+  // --- send email to team (opens the user's own mail client, mailto: only) ---
+  document.getElementById("email-team-btn-admin").addEventListener("click", () => {
+    openMailtoForTeam(detail);
+  });
 
   // --- messages board ---
   document.getElementById("add-message-btn").addEventListener("click", () => {
@@ -2502,6 +2525,23 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str || "";
   return div.innerHTML;
+}
+
+/**
+ * Opens the user's own email client (via a plain mailto: link) addressed to
+ * every active member of a team — this never sends anything through
+ * OfficePal itself; it just hands off to whatever mail app is configured on
+ * the person's device, exactly like clicking any other mailto link. Shared
+ * by the "Send email to team" button in the Admin area and in the sidebar.
+ */
+function openMailtoForTeam(detail) {
+  const members = detail && detail.members;
+  const emails = (members || []).map((m) => m.email).filter(Boolean);
+  if (!emails.length) {
+    showToast(t("email_team_no_addresses"));
+    return;
+  }
+  window.location.href = "mailto:" + emails.map(encodeURIComponent).join(",");
 }
 
 /** Web URL for a stored avatar filename, or null if the person has none. */

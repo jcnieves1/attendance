@@ -50,6 +50,11 @@ itself, with no email dependency anywhere.
 - Everyone can change their own password any time from **My account**.
 - Admins can download the attendance dashboard as an Excel (.xlsx) file,
   honoring whatever year/month filter is currently applied.
+- A "Send email to team" button (sidebar, and the Admin area's Members card)
+  opens the user's own email client via a plain `mailto:` link addressed to
+  every active team member — OfficePal never sends anything itself, it just
+  hands off to whatever mail app is configured locally, exactly like clicking
+  any other mailto link on the web.
 - Pal the frog 🐸 — a friendly mascot who carries a little notebook and
   pencil everywhere, cheerfully "taking notes" on who's checked in.
 
@@ -325,6 +330,13 @@ your machine's local IP, to try the mobile layout).
     anywhere else on the page don't do anything; it only goes away once the
     server has actually responded, so there's never a moment where you're
     not sure whether an action went through or can be triggered twice.
+27. As a manager, click **Send email to team** — either in the sidebar
+    (below your **My teams** list, for whichever team is currently open) or
+    in **Admin area** → **Members** — and confirm your device's email client
+    opens with every active member's address already filled in, ready to
+    write and send from there directly (OfficePal itself never touches the
+    message). Switch to an employee-only account and confirm the sidebar
+    button stays hidden — sending to the whole team is a manager action.
 
 ## Project structure
 
