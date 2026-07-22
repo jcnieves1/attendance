@@ -1683,7 +1683,7 @@ function renderTeamDashboard(rows, year, month) {
 
   const trackWeekends = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.track_weekends);
   const heatmapHtml = month
-    ? `<div class="heatcal-wrap">${buildHeatmapCalendarHtml(rows, year, month, trackWeekends)}</div>`
+    ? `<div class="heatcal-wrap">${buildHeatmapCalendarHtml(rows, year, month, trackWeekends, true)}</div>`
     : buildYearHeatmapCalendarsHtml(rows, year, trackWeekends);
 
   body.innerHTML = `
@@ -1718,14 +1718,26 @@ function renderTeamDashboard(rows, year, month) {
   wireHeatmapDayClicks(body, rows);
 }
 
+/** Cap on how many little mascot icons are drawn inside a single day cell —
+ *  beyond this the rest are folded into a "+N" badge so a busy day doesn't
+ *  overflow the cell. Only used in the single-month view (see showMascots). */
+const MAX_DAY_MASCOTS = 8;
+
 /**
  * Builds one month as a calendar grid where each day cell is colored by
  * attendance heat level (same 0-4 scale the old linear heatmap used), and
  * carries a tooltip with the date plus who actually checked in that day.
  * Used both for a single selected month and, one-per-month, for a whole
  * year's worth of mini calendars.
+ *
+ * When showMascots is true (single-month view only — the year view's cells
+ * are too small for this), each day additionally gets one little mascot icon
+ * per person who attended that day, so the count of attendees is visible at
+ * a glance; hovering an icon shows that person's name via its title
+ * attribute. This is purely decorative on top of the existing heat color and
+ * tooltip — it doesn't change what clicking the cell does.
  */
-function buildHeatmapCalendarHtml(rows, year, month, trackWeekends) {
+function buildHeatmapCalendarHtml(rows, year, month, trackWeekends, showMascots = false) {
   const namesByDate = {};
   rows.forEach((r) => {
     if (!namesByDate[r.attendance_date]) namesByDate[r.attendance_date] = [];
@@ -1756,9 +1768,22 @@ function buildHeatmapCalendarHtml(rows, year, month, trackWeekends) {
     if (isToday) classes.push("today");
     if (isWeekend && !trackWeekends) classes.push("weekend-muted");
 
+    let mascotsHtml = "";
+    if (showMascots && c > 0) {
+      const shown = names.slice(0, MAX_DAY_MASCOTS);
+      const extra = c - shown.length;
+      mascotsHtml = `
+        <div class="heatcal-day-mascots">
+          ${shown.map((n) => `<img class="heatcal-day-mascot" src="assets/img/mascot-wave.svg" alt="" title="${escapeHtml(n)}" />`).join("")}
+          ${extra > 0 ? `<span class="heatcal-day-mascot-more" title="${escapeHtml(names.slice(MAX_DAY_MASCOTS).join(", "))}">+${extra}</span>` : ""}
+        </div>
+      `;
+    }
+
     cellsHtml += `
       <div class="${classes.join(" ")}" data-level="${level}" data-date="${dateStr}" title="${escapeHtml(tooltip)}">
         <div class="cal-day-num">${day}</div>
+        ${mascotsHtml}
       </div>
     `;
   }
@@ -2435,7 +2460,7 @@ function renderAdminDashboard(data, year, month, selectedMemberIds) {
   const trackWeekends = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.track_weekends);
   const possibleDays = countApplicableDays(from, to, trackWeekends);
   const heatmapHtml = month
-    ? `<div class="heatcal-wrap">${buildHeatmapCalendarHtml(attendance, year, month, trackWeekends)}</div>`
+    ? `<div class="heatcal-wrap">${buildHeatmapCalendarHtml(attendance, year, month, trackWeekends, true)}</div>`
     : buildYearHeatmapCalendarsHtml(attendance, year, trackWeekends);
 
   const byMember = {};

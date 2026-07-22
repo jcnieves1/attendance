@@ -64,6 +64,13 @@ itself, with no email dependency anywhere.
   locked (the default) restricts check-ins to today or a past day; allowed
   lets members check in for any day, including upcoming ones. Enforced
   server-side in `api/attendance/checkin.php`, not just hidden in the UI.
+- On the single-month view of "Teammates' attendance" and the Admin area's
+  "Attendance dashboard", each day that had attendance shows one little
+  mascot icon per person who checked in (hover an icon to see their name),
+  on top of the existing heat-map color — a busy day is visible at a glance,
+  and clicking the day still opens the same detailed attendance popup as
+  before. The whole-year view stays heat-color-only since its cells are too
+  small for icons.
 - Pal the frog 🐸 — a friendly mascot who carries a little notebook and
   pencil everywhere, cheerfully "taking notes" on who's checked in.
 
@@ -370,6 +377,14 @@ your machine's local IP, to try the mobile layout).
     rejects a future date with `future_checkin_disabled` even if the request
     is sent directly, so the toggle is a real access control, not just a UI
     convenience.
+30. On **My Attendance** → **Teammates' attendance**, switch to a single
+    month (not the whole year) and look at any day several people checked
+    in on: you'll see one small mascot per attendee inside that day, still
+    colored by the same heat-map shade. Hover a mascot to see that person's
+    name in a tooltip, and click the day itself — the same numbered
+    attendance popup from step 25 still opens, unchanged. Confirm the same
+    on the Admin area's **Attendance dashboard**, and confirm the whole-year
+    view stays icon-free (the cells are too small there).
 
 ## Project structure
 

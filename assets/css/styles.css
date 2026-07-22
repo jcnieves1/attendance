@@ -446,6 +446,28 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
   padding: 1px 5px; border-radius: 5px; font-weight: 700;
 }
 
+/* One small mascot icon per attendee, single-month view only (see
+   showMascots in buildHeatmapCalendarHtml) — gives an at-a-glance sense of
+   how many people were in that day, on top of the heat color. Each icon's
+   title attribute carries that person's name for a hover tooltip; a "+N"
+   badge folds in anyone past MAX_DAY_MASCOTS so a busy day can't overflow
+   the cell. Purely decorative — the cell's own click handler still fires. */
+.heatcal-day-mascots {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 2px; margin-top: 3px; max-width: 100%;
+}
+.heatcal-day-mascot { width: 13px; height: 13px; flex: 0 0 auto; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15)); }
+.heatcal-day-mascot-more {
+  font-size: 9px; font-weight: 700; color: #2d2a35; background: rgba(255, 255, 255, 0.65);
+  border-radius: 4px; padding: 0 3px; line-height: 14px;
+}
+
+@media (max-width: 480px) {
+  .heatcal-day-mascot { width: 9px; height: 9px; }
+  .heatcal-day-mascot-more { font-size: 8px; line-height: 11px; }
+  .heatcal-day-mascots { gap: 1px; margin-top: 2px; }
+}
+
 /* Numbered "who attended this day" list in the day-attendance popup. */
 .day-attendance-list { list-style: decimal; margin: 0; padding-left: 24px; }
 .day-attendance-list li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
