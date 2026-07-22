@@ -1117,13 +1117,23 @@ async function renderWeekTab() {
   const from = ymd(weekDates[0]);
   const to = ymd(weekDates[weekDates.length - 1]);
 
-  const [mine, favorites] = await Promise.all([
+  const [mine, favorites, teamAttendance] = await Promise.all([
     apiGet("attendance/mine.php", { team_id: teamId, from, to }),
     apiGet("favorites/get.php", { team_id: teamId }),
+    apiGet("attendance/team.php", { team_id: teamId, from, to }),
   ]);
 
   const checkedDates = new Set(mine.attendance.map((a) => a.attendance_date));
   const favoriteDows = new Set(favorites.days);
+  // Purely informational: who from the team has already checked in on each
+  // day of this week, shown as little mascot icons in the square (see
+  // MAX_DAY_MASCOTS / heatcal-day-mascots for the same idea on the other
+  // attendance calendars). Doesn't affect the day-cell's own click behavior.
+  const namesByDateThisWeek = {};
+  teamAttendance.attendance.forEach((a) => {
+    if (!namesByDateThisWeek[a.attendance_date]) namesByDateThisWeek[a.attendance_date] = [];
+    namesByDateThisWeek[a.attendance_date].push(a.full_name);
+  });
   const suggestedDows = new Set(APP.currentTeamDetail.suggested_days);
   const mascotMsg = pickMascotMessage();
   const isManager = APP.currentTeamDetail.my_role === "owner" || APP.currentTeamDetail.my_role === "admin";
@@ -1177,6 +1187,19 @@ async function renderWeekTab() {
     // this always matches what the user sees on their computer right now.
     const isFuture = !allowFutureCheckin && dstr > todayStr;
 
+    const attendeeNames = namesByDateThisWeek[dstr] || [];
+    let mascotsHtml = "";
+    if (attendeeNames.length) {
+      const shown = attendeeNames.slice(0, MAX_DAY_MASCOTS);
+      const extra = attendeeNames.length - shown.length;
+      mascotsHtml = `
+        <div class="day-cell-mascots">
+          ${shown.map((n) => `<img class="day-cell-mascot" src="assets/img/mascot-wave.svg" alt="" title="${escapeHtml(n)}" />`).join("")}
+          ${extra > 0 ? `<span class="day-cell-mascot-more" title="${escapeHtml(attendeeNames.slice(MAX_DAY_MASCOTS).join(", "))}">+${extra}</span>` : ""}
+        </div>
+      `;
+    }
+
     const cell = document.createElement("div");
     cell.className = "day-cell" + (isChecked ? " checked-in" : "") + (isSuggested ? " suggested" : "") + (isFavorite ? " favorite" : "") + (isFuture ? " disabled" : "");
     cell.innerHTML = `
@@ -1184,6 +1207,7 @@ async function renderWeekTab() {
       <div class="dow">${t(DAY_KEYS[i])}</div>
       <div class="dnum">${date.getDate()}</div>
       ${isSuggested ? `<span class="tag">${t("suggested_tag")}</span>` : ""}
+      ${mascotsHtml}
     `;
     if (isFuture) {
       cell.title = t("future_day_hint");

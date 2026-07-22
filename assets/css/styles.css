@@ -305,6 +305,7 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 .day-cell {
   border: 2px solid var(--border); border-radius: 14px; padding: 12px 6px; text-align: center;
   background: var(--surface-alt); position: relative; cursor: pointer; transition: 0.12s ease;
+  min-height: 112px;
 }
 .day-cell:hover { transform: translateY(-2px); }
 .day-cell .dow { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
@@ -319,6 +320,25 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 .day-cell.favorite .fav-star { position: absolute; top: 4px; right: 6px; font-size: 12px; }
 .day-cell.disabled { opacity: 0.45; cursor: not-allowed; }
 .day-cell.disabled:hover { transform: none; }
+
+/* Purely informational little mascot icons showing who from the team has
+   already checked in on that day this week — hover one to see the name
+   (title attribute). Doesn't change the square's own click-to-check-in
+   behavior; see MAX_DAY_MASCOTS in app.js for the same "+N" overflow idea
+   used on the other attendance calendars. */
+.day-cell-mascots {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 3px; margin-top: 8px; max-width: 100%;
+}
+.day-cell-mascot {
+  width: 15px; height: 15px; flex: 0 0 auto; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75); padding: 1px; box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.day-cell.checked-in .day-cell-mascot { background: rgba(255, 255, 255, 0.9); }
+.day-cell-mascot-more {
+  font-size: 10px; font-weight: 700; color: #2d2a35; background: rgba(255, 255, 255, 0.85);
+  border-radius: 999px; padding: 0 5px; line-height: 15px;
+}
 
 /* ---------------- Heatmap (yearly dashboard) ---------------- */
 .heatmap { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 14px); gap: 3px; overflow-x: auto; padding-bottom: 8px; }
@@ -787,6 +807,8 @@ label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: bl
 
 @media (max-width: 480px) {
   .week-grid { grid-template-columns: repeat(2, 1fr); }
-  .day-cell { padding: 10px 4px; }
+  .day-cell { padding: 10px 4px; min-height: 96px; }
+  .day-cell-mascot { width: 11px; height: 11px; }
+  .day-cell-mascot-more { font-size: 9px; line-height: 12px; }
   .field-row { flex-direction: column; gap: 0; }
 }

@@ -71,6 +71,11 @@ itself, with no email dependency anywhere.
   and clicking the day still opens the same detailed attendance popup as
   before. The whole-year view stays heat-color-only since its cells are too
   small for icons.
+- The **This week** squares show the same idea: each day already has one
+  little mascot icon per teammate who's checked in that day (hover for the
+  name), purely so you know who's already in before you check yourself in —
+  the "Suggested" tag and your favorite-day star are unaffected, and the
+  square just grows a touch taller to fit the icons.
 - Pal the frog 🐸 — a friendly mascot who carries a little notebook and
   pencil everywhere, cheerfully "taking notes" on who's checked in.
 
@@ -385,6 +390,13 @@ your machine's local IP, to try the mobile layout).
     attendance popup from step 25 still opens, unchanged. Confirm the same
     on the Admin area's **Attendance dashboard**, and confirm the whole-year
     view stays icon-free (the cells are too small there).
+31. On **This week**, have a teammate (or a second test account) check in
+    for a day, then reload: that day's square now shows a small mascot icon
+    for them, hover it to see their name. The **Suggested** tag and your own
+    favorite-day ★ on that same square are untouched, and the square is a
+    touch taller than before to leave room for the icons. Clicking the
+    square still checks you in/out exactly as before — the icons are purely
+    informational.
 
 ## Project structure
 
