@@ -1162,16 +1162,20 @@ async function renderWeekTab() {
 
   const grid = document.getElementById("week-grid");
   const todayStr = ymd(new Date());
+  // Off by default, a manager/admin can turn this on from Admin area ->
+  // "Days tracked" -> "Allow future check-ins" — enforced server-side too
+  // (see api/attendance/checkin.php), this is just the client mirroring it.
+  const allowFutureCheckin = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.allow_future_checkin);
   weekDates.forEach((date, i) => {
     const dstr = ymd(date);
     const isChecked = checkedDates.has(dstr);
     const isSuggested = suggestedDows.has(i);
     const isFavorite = favoriteDows.has(i);
-    // Future days are read-only — you can't log attendance for a day that
-    // hasn't happened yet. Compared against the browser's own clock, never
-    // the server's, so this always matches what the user sees on their
-    // computer right now.
-    const isFuture = dstr > todayStr;
+    // Future days are read-only by default — you can't log attendance for a
+    // day that hasn't happened yet, unless the team has explicitly opted
+    // in. Compared against the browser's own clock, never the server's, so
+    // this always matches what the user sees on their computer right now.
+    const isFuture = !allowFutureCheckin && dstr > todayStr;
 
     const cell = document.createElement("div");
     cell.className = "day-cell" + (isChecked ? " checked-in" : "") + (isSuggested ? " suggested" : "") + (isFavorite ? " favorite" : "") + (isFuture ? " disabled" : "");
@@ -1562,9 +1566,10 @@ function renderMyDashboard(rows, year, month) {
     // a little mascot badge so it's easy to spot at a glance.
     const checkedDates = new Set(rows.map((r) => r.attendance_date));
     const trackWeekends = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.track_weekends);
+    const allowFutureCheckin = !!(APP.currentTeamDetail && APP.currentTeamDetail.team && APP.currentTeamDetail.team.allow_future_checkin);
     body.innerHTML = `
       <div style="font-size:32px; font-weight:700;">${total} <span style="font-size:14px; color:var(--text-muted); font-weight:500;">${t("total_days_month")}</span></div>
-      <div class="cal-wrap">${buildMonthCalendarHtml(checkedDates, year, month, trackWeekends, true)}</div>
+      <div class="cal-wrap">${buildMonthCalendarHtml(checkedDates, year, month, trackWeekends, true, allowFutureCheckin)}</div>
     `;
     wireMyCalendarEditing(body, checkedDates);
     return;
@@ -1616,9 +1621,11 @@ function wireMyCalendarEditing(container, checkedDates) {
  * When editable is true (the personal "My attendance" view only — never the
  * read-only teammate calendar modal), today and past trackable days get a
  * .cal-editable class + data-date so a click handler can toggle attendance;
- * future days are marked .cal-future (dimmed, not clickable) instead.
+ * future days are marked .cal-future (dimmed, not clickable) instead — unless
+ * allowFuture is set (the team has "Allow future check-ins" turned on in
+ * Admin area), in which case future days are just as editable as any other.
  */
-function buildMonthCalendarHtml(checkedDatesSet, year, month, trackWeekends, editable = false) {
+function buildMonthCalendarHtml(checkedDatesSet, year, month, trackWeekends, editable = false, allowFuture = false) {
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDow = (new Date(year, month - 1, 1).getDay() + 6) % 7; // 0=Mon..6=Sun
   const todayStr = ymd(new Date());
@@ -1635,7 +1642,7 @@ function buildMonthCalendarHtml(checkedDatesSet, year, month, trackWeekends, edi
     const isWeekend = dow >= 5;
     const isChecked = checkedDatesSet.has(dateStr);
     const isToday = dateStr === todayStr;
-    const isFuture = dateStr > todayStr;
+    const isFuture = !allowFuture && dateStr > todayStr;
     const isTrackable = trackWeekends || !isWeekend;
     const isEditable = editable && !isFuture && isTrackable;
 
@@ -1826,6 +1833,13 @@ async function renderAdminTab() {
           <button data-mode="all_week">${t("tracking_mode_all_week")}<span class="mode-desc">${t("tracking_mode_all_week_desc")}</span></button>
         </div>
 
+        <h2 style="margin-top:24px;" data-t="allow_future_checkin_title">Future check-ins</h2>
+        <p style="font-size:13px; color:var(--text-muted);" data-t="allow_future_checkin_hint"></p>
+        <div class="mode-toggle" id="allow-future-checkin-toggle">
+          <button data-allow="0">${t("future_checkin_off")}<span class="mode-desc">${t("future_checkin_off_desc")}</span></button>
+          <button data-allow="1">${t("future_checkin_on")}<span class="mode-desc">${t("future_checkin_on_desc")}</span></button>
+        </div>
+
         <h2 style="margin-top:24px;" data-t="suggested_days_title">Suggested office days</h2>
         <p style="font-size:13px; color:var(--text-muted);" data-t="suggested_days_hint"></p>
         <div class="checkbox-days" id="suggested-days-box"></div>
@@ -1926,6 +1940,22 @@ async function renderAdminTab() {
       const trackWeekends = btn.dataset.mode === "all_week";
       try {
         await apiPost("teams/set_tracking_mode.php", { team_id: teamId, track_weekends: trackWeekends });
+        showToast(t("saved"));
+        renderMain();
+      } catch (err) {
+        showToast(err.message || t("error_generic"));
+      }
+    });
+  });
+
+  // --- allow future check-ins toggle ---
+  const allowFutureButtons = document.querySelectorAll("#allow-future-checkin-toggle button");
+  const currentAllowFuture = detail.team.allow_future_checkin ? "1" : "0";
+  allowFutureButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.allow === currentAllowFuture));
+  allowFutureButtons.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        await apiPost("teams/set_allow_future_checkin.php", { team_id: teamId, allow_future_checkin: btn.dataset.allow === "1" });
         showToast(t("saved"));
         renderMain();
       } catch (err) {

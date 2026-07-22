@@ -10,7 +10,7 @@ if (!$teamId) {
 $membership = require_member($userId, $teamId);
 $pdo = db();
 
-$stmt = $pdo->prepare('SELECT id, name, description, owner_id, track_weekends, join_policy, auto_accept_join_requests FROM teams WHERE id = ?');
+$stmt = $pdo->prepare('SELECT id, name, description, owner_id, track_weekends, allow_future_checkin, join_policy, auto_accept_join_requests FROM teams WHERE id = ?');
 $stmt->execute([$teamId]);
 $team = $stmt->fetch();
 if (!$team) {

@@ -13,6 +13,19 @@ if (!$teamId || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
 require_member($userId, $teamId);
 $pdo = db();
 
+// A future date is only allowed if the team's manager has explicitly turned
+// that on (Admin area -> "Days tracked" -> "Allow future check-ins"). This
+// is the actual enforcement — the frontend just avoids offering the click
+// in the first place, but that's only a convenience; this check is what
+// actually prevents it, even if someone calls the API directly.
+if ($date > date('Y-m-d')) {
+    $stmt = $pdo->prepare('SELECT allow_future_checkin FROM teams WHERE id = ?');
+    $stmt->execute([$teamId]);
+    if (!$stmt->fetchColumn()) {
+        json_error('future_checkin_disabled', 422, "This team doesn't allow checking in for a future date.");
+    }
+}
+
 $stmt = $pdo->prepare(
     'INSERT INTO attendance (user_id, team_id, attendance_date)
      VALUES (?, ?, ?)

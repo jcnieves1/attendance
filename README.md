@@ -60,6 +60,10 @@ itself, with no email dependency anywhere.
   straight back to the landing page's login tab with a toast explaining why,
   instead of leaving them stuck on a page where every further click would
   just keep failing the same way.
+- Per-team **"Allow future check-ins"** toggle (Admin area → Days tracked):
+  locked (the default) restricts check-ins to today or a past day; allowed
+  lets members check in for any day, including upcoming ones. Enforced
+  server-side in `api/attendance/checkin.php`, not just hidden in the UI.
 - Pal the frog 🐸 — a friendly mascot who carries a little notebook and
   pencil everywhere, cheerfully "taking notes" on who's checked in.
 
@@ -198,6 +202,17 @@ fixed 256x256 resolution, and re-encodes them as a quality-reduced JPEG
 before saving to `uploads/avatars/`, so storage stays small and bounded no
 matter what was uploaded. Requires the `gd` PHP extension, and
 `uploads/avatars/` must be writable by the web server.
+
+If you're upgrading further to add "Allow future check-ins", also run:
+
+```bash
+mysql -u root -p officepal < database/migrate_v12_allow_future_checkin.sql
+```
+
+It adds `teams.allow_future_checkin` (off by default). When off, members can
+only check in for today or a past day, in both the UI and the API — the
+enforcement lives server-side in `api/attendance/checkin.php`, not just in
+the calendar's clickability.
 
 ## 2. Configure the app
 
@@ -347,6 +362,14 @@ your machine's local IP, to try the mobile layout).
     the `PHPSESSID` cookie for this site, then click anything that hits the
     server (e.g. toggle a day on **This week**). You're dropped straight back
     to the landing page's login tab with a "Please log in to continue" toast.
+29. In **Admin area** → **Days tracked**, flip **Future check-ins** to
+    "Allowed", then go to **This week** or **My Attendance** and click a day
+    later than today — it's now clickable and checks you in normally. Flip
+    it back to "Locked" and confirm future days go back to disabled. The
+    restriction is enforced server-side too: `api/attendance/checkin.php`
+    rejects a future date with `future_checkin_disabled` even if the request
+    is sent directly, so the toggle is a real access control, not just a UI
+    convenience.
 
 ## Project structure
 
@@ -374,6 +397,8 @@ OfficePal/
     migrate_v9_login_attempts.sql     Upgrade path: login CAPTCHA + rate limit
     migrate_v10_team_messages.sql     Upgrade path: Admin area messages board
     migrate_v11_avatar.sql            Upgrade path: profile pictures
+    migrate_v12_allow_future_checkin.sql
+                                       Upgrade path: allow future check-ins
 ```
 
 ## Notes on the design

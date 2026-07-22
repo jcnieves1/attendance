@@ -215,6 +215,14 @@ const DICT = {
     tracking_mode_all_week: "All week",
     tracking_mode_all_week_desc: "Monday to Sunday",
 
+    // Allow future check-ins toggle
+    allow_future_checkin_title: "Future check-ins",
+    allow_future_checkin_hint: "Choose whether members can check in for an upcoming day, or only for today and past days.",
+    future_checkin_off: "Locked",
+    future_checkin_off_desc: "Only today or a past day",
+    future_checkin_on: "Allowed",
+    future_checkin_on_desc: "Any day, including upcoming ones",
+
     // Week / attendance
     this_week: "This week",
     mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
@@ -545,6 +553,13 @@ const DICT = {
     tracking_mode_weekdays_desc: "Solo de lunes a viernes",
     tracking_mode_all_week: "Semana completa",
     tracking_mode_all_week_desc: "De lunes a domingo",
+
+    allow_future_checkin_title: "Registro de días futuros",
+    allow_future_checkin_hint: "Elige si los miembros pueden registrar asistencia para un día próximo, o solo para hoy y días pasados.",
+    future_checkin_off: "Bloqueado",
+    future_checkin_off_desc: "Solo hoy o un día pasado",
+    future_checkin_on: "Permitido",
+    future_checkin_on_desc: "Cualquier día, incluyendo próximos",
 
     this_week: "Esta semana",
     mon: "Lun", tue: "Mar", wed: "Mié", thu: "Jue", fri: "Vie", sat: "Sáb", sun: "Dom",

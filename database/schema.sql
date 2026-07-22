@@ -51,6 +51,11 @@ CREATE TABLE IF NOT EXISTS users (
 -- auto_accept_join_requests only matters for 'open' teams: when on, a "Find a
 -- team" request is approved immediately (no admin action needed) instead of
 -- waiting in the Join requests panel.
+-- allow_future_checkin: off by default (locks check-ins to today/past only,
+-- the original behavior) — a manager/admin can turn it on to let members
+-- check in for upcoming days too. Enforced both client-side (day cells) and
+-- server-side (api/attendance/checkin.php), so it can't be bypassed by
+-- calling the API directly.
 CREATE TABLE IF NOT EXISTS teams (
     id                          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name                        VARCHAR(150) NOT NULL UNIQUE,
@@ -59,6 +64,7 @@ CREATE TABLE IF NOT EXISTS teams (
     auto_accept_join_requests   TINYINT(1) NOT NULL DEFAULT 0,
     owner_id        INT UNSIGNED NOT NULL,
     track_weekends  TINYINT(1) NOT NULL DEFAULT 0,
+    allow_future_checkin TINYINT(1) NOT NULL DEFAULT 0,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_teams_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
